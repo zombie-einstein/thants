@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "thants"
+version = "0.1.0"
+description = "Ants! On your GPU! With JAX!"
+authors = ["zombie-einstein <13398815+zombie-einstein@users.noreply.github.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "thants", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+esquilax = "^2.1.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.1"
+pre-commit = "^4.3.0"
+taskipy = "^1.14.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
