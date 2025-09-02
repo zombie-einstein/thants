@@ -7,6 +7,7 @@ from jumanji.env import ActionSpec
 from jumanji.types import TimeStep, restart, transition
 
 from . import steps
+from .actions import derive_actions
 from .types import Ants, Observation, State
 
 
@@ -46,22 +47,19 @@ class Thants(Environment):
         return state, time_step
 
     def step(
-        self, state: State, action: chex.Array
+        self, state: State, actions: chex.Array
     ) -> Tuple[State, TimeStep[Observation]]:
         # Unwrap actions
-        movement_actions = jnp.zeros((self.n_agents, 2), dtype=int)
-        take_food_actions = jnp.zeros((self.n_agents,))
-        deposit_food_actions = jnp.zeros((self.n_agents,))
-        deposit_signal_actions = jnp.zeros((self.n_agents,))
+        actions = derive_actions(actions)
 
         # Apply movements
-        new_pos = steps.update_positions(self.dims, state.ants.pos, movement_actions)
+        new_pos = steps.update_positions(self.dims, state.ants.pos, actions.movements)
         # Pick up and drop-off food
         new_food, new_carrying = steps.update_food(
             state.food,
             new_pos,
-            take_food_actions,
-            deposit_food_actions,
+            actions.take_food,
+            actions.deposit_food,
             state.ants.carrying,
             1.0,
         )
@@ -72,7 +70,7 @@ class Thants(Environment):
         )
         # Deposit signals
         new_signals = steps.deposit_signals(
-            new_signals, new_pos, deposit_signal_actions
+            new_signals, new_pos, actions.deposit_signals
         )
 
         new_state = State(

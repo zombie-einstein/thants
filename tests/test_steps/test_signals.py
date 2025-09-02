@@ -3,7 +3,7 @@ import jax.numpy as jnp
 from thants.steps import deposit_signals, update_signals
 
 
-def test_deposit_signals():
+def test_deposit_signals() -> None:
     signals = jnp.zeros((3, 3), dtype=float)
     pos = jnp.array([[1, 1]])
     deposits = jnp.array([0.5])
@@ -12,7 +12,7 @@ def test_deposit_signals():
     assert jnp.allclose(new_signals, expected)
 
 
-def test_dissipate_signals():
+def test_dissipate_signals() -> None:
     signals = jnp.zeros((3, 3), dtype=float)
     signals = signals.at[1, 1].set(0.2)
 

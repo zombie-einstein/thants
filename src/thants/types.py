@@ -26,3 +26,11 @@ class State:
 @dataclass
 class Observation:
     local: chex.Array  # (n_ants, 9 * 3)
+
+
+@dataclass
+class Actions:
+    movements: chex.Array  # (n_ants, 2)
+    take_food: chex.Array  # (n_ants,)
+    deposit_food: chex.Array  # (n_ants,)
+    deposit_signals: chex.Array  # (n_ants,)
