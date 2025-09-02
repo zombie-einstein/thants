@@ -8,7 +8,8 @@ from jumanji.types import TimeStep, restart, transition
 
 from . import steps
 from .actions import derive_actions
-from .types import Ants, Observation, State
+from .observations import observations_from_state
+from .types import Ants, Observations, State
 
 
 class Thants(Environment):
@@ -25,7 +26,7 @@ class Thants(Environment):
         self.dissipation_rate = dissipation_rate
         super().__init__()
 
-    def reset(self, key: chex.PRNGKey) -> Tuple[State, TimeStep[Observation]]:
+    def reset(self, key: chex.PRNGKey) -> Tuple[State, TimeStep[Observations]]:
         food = jnp.zeros(self.dims, dtype=int)
         signals = jnp.zeros(self.dims, dtype=float)
         nest = jnp.zeros(self.dims, dtype=bool)
@@ -42,13 +43,13 @@ class Thants(Environment):
             signals=signals,
             nest=nest,
         )
-        observation = Observation(local=jnp.zeros((self.n_agents, 9)))
-        time_step = restart(observation=observation, shape=(self.n_agents,))
+        observations = observations_from_state(self.dims, state)
+        time_step = restart(observation=observations, shape=(self.n_agents,))
         return state, time_step
 
     def step(
         self, state: State, actions: chex.Array
-    ) -> Tuple[State, TimeStep[Observation]]:
+    ) -> Tuple[State, TimeStep[Observations]]:
         # Unwrap actions
         actions = derive_actions(actions)
 
@@ -79,12 +80,12 @@ class Thants(Environment):
             signals=new_signals,
             nest=state.nest,
         )
-        observations = Observation(local=jnp.zeros((self.n_agents, 9)))
+        observations = observations_from_state(self.dims, new_state)
         rewards = jnp.zeros((self.n_agents,))
         timestep = transition(rewards, observations, shape=(self.n_agents,))
         return new_state, timestep
 
-    def observation_spec(self) -> specs.Spec[Observation]:
+    def observation_spec(self) -> specs.Spec[Observations]:
         pass
 
     def action_spec(self) -> ActionSpec:
