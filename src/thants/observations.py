@@ -21,7 +21,7 @@ def observations_from_state(dims: tuple[int, int], state: State) -> Observations
     ants = jax.vmap(get_view, in_axes=(None, 0))(occupation, view_idxs)
     food = jax.vmap(get_view, in_axes=(None, 0))(state.food, view_idxs)
     signals = jax.vmap(get_view, in_axes=(None, 0))(state.signals, view_idxs)
-    nest = jax.vmap(get_view, in_axes=(None, 0))(state.nest, view_idxs)
+    nest = jax.vmap(get_view, in_axes=(None, 0))(state.nest, view_idxs).astype(float)
 
     return Observations(
         ants=ants, food=food, signals=signals, nest=nest, carrying=state.ants.carrying

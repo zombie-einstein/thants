@@ -16,6 +16,7 @@ def test_observations_from_state():
     nest = jnp.zeros(dims)
 
     state = State(
+        step=0,
         ants=Ants(
             pos=ant_pos,
             health=ant_health,

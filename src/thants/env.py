@@ -1,10 +1,11 @@
-from functools import cached_property
+from functools import cached_property, partial
 from typing import Optional, Tuple
 
 import chex
+import jax
 import jax.numpy as jnp
 from jumanji import Environment, specs
-from jumanji.types import TimeStep, restart, transition
+from jumanji.types import TimeStep, restart, termination, transition
 
 from . import steps
 from .actions import derive_actions
@@ -21,6 +22,7 @@ class Thants(Environment):
         decay_rate=0.05,
         dissipation_rate=0.0,
         reward_fn: Optional[RewardFn] = None,
+        max_steps: int = 1_000,
     ) -> None:
         self.dims = dims
         self.n_agents = n_agents
@@ -28,16 +30,18 @@ class Thants(Environment):
         self.dissipation_rate = dissipation_rate
         self.reward_fn = reward_fn or NullRewardFn()
         self.carry_capacity = 1.0
+        self.max_steps = max_steps
         super().__init__()
 
     def reset(self, key: chex.PRNGKey) -> Tuple[State, TimeStep[Observations]]:
-        food = jnp.zeros(self.dims, dtype=int)
+        food = jnp.zeros(self.dims, dtype=float)
         signals = jnp.zeros(self.dims, dtype=float)
         nest = jnp.zeros(self.dims, dtype=bool)
-        ant_pos = jnp.indices((5, 5)).reshape((25, 2))
+        ant_pos = jnp.indices((5, self.n_agents // 5)).reshape(self.n_agents, 2)
         ant_health = jnp.ones((self.n_agents,))
         ant_carrying = jnp.zeros((self.n_agents,))
         state = State(
+            step=0,
             ants=Ants(
                 pos=ant_pos,
                 health=ant_health,
@@ -79,6 +83,7 @@ class Thants(Environment):
         )
 
         new_state = State(
+            step=state.step + 1,
             ants=Ants(pos=new_pos, health=state.ants.health, carrying=new_carrying),
             food=new_food,
             signals=new_signals,
@@ -86,7 +91,13 @@ class Thants(Environment):
         )
         observations = observations_from_state(self.dims, new_state)
         rewards = self.reward_fn(old_state=state, new_state=new_state)
-        timestep = transition(rewards, observations, shape=(self.n_agents,))
+        timestep = jax.lax.cond(
+            state.step >= self.max_steps,
+            partial(termination, shape=(self.num_agents,)),
+            partial(transition, shape=(self.num_agents,)),
+            rewards,
+            observations,
+        )
         return new_state, timestep
 
     @cached_property
