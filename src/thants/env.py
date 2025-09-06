@@ -1,9 +1,9 @@
+from functools import cached_property
 from typing import Optional, Tuple
 
 import chex
 import jax.numpy as jnp
 from jumanji import Environment, specs
-from jumanji.env import ActionSpec
 from jumanji.types import TimeStep, restart, transition
 
 from . import steps
@@ -27,6 +27,7 @@ class Thants(Environment):
         self.decay_rate = decay_rate
         self.dissipation_rate = dissipation_rate
         self.reward_fn = reward_fn or NullRewardFn()
+        self.carry_capacity = 1.0
         super().__init__()
 
     def reset(self, key: chex.PRNGKey) -> Tuple[State, TimeStep[Observations]]:
@@ -66,7 +67,7 @@ class Thants(Environment):
             actions.take_food,
             actions.deposit_food,
             state.ants.carrying,
-            1.0,
+            self.carry_capacity,
         )
         # Dissipate chemicals
         new_signals = steps.update_signals(
@@ -88,8 +89,70 @@ class Thants(Environment):
         timestep = transition(rewards, observations, shape=(self.n_agents,))
         return new_state, timestep
 
-    def observation_spec(self) -> specs.Spec[Observations]:
-        pass
+    @cached_property
+    def num_agents(self) -> int:
+        return self.n_agents
 
-    def action_spec(self) -> ActionSpec:
-        pass
+    @cached_property
+    def observation_spec(self) -> specs.Spec[Observations]:
+        ants = specs.BoundedArray(
+            shape=(self.num_agents, 9),
+            minimum=0.0,
+            maximum=1.0,
+            dtype=float,
+            name="ants",
+        )
+        food = specs.BoundedArray(
+            shape=(self.num_agents, 9),
+            minimum=0.0,
+            maximum=jnp.inf,
+            dtype=float,
+            name="food",
+        )
+        signals = specs.BoundedArray(
+            shape=(self.num_agents, 9),
+            minimum=0.0,
+            maximum=jnp.inf,
+            dtype=float,
+            name="signals",
+        )
+        nest = specs.BoundedArray(
+            shape=(self.num_agents, 9),
+            minimum=0.0,
+            maximum=1.0,
+            dtype=float,
+            name="nest",
+        )
+        carrying = specs.BoundedArray(
+            shape=(self.num_agents,),
+            minimum=0.0,
+            maximum=self.carry_capacity,
+            dtype=float,
+            name="carrying",
+        )
+
+        return specs.Spec(
+            Observations,
+            "ObservationSpec",
+            ants=ants,
+            food=food,
+            signals=signals,
+            nest=nest,
+            carrying=carrying,
+        )
+
+    @cached_property
+    def action_spec(self) -> specs.BoundedArray:
+        return specs.BoundedArray(
+            shape=(self.n_agents,),
+            minimum=0,
+            maximum=8,
+            dtype=int,
+        )
+
+    @cached_property
+    def reward_spec(self) -> specs.Array:
+        return specs.Array(
+            shape=(self.n_agents,),
+            dtype=float,
+        )
