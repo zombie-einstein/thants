@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 import chex
 import jax.numpy as jnp
@@ -9,6 +9,7 @@ from jumanji.types import TimeStep, restart, transition
 from . import steps
 from .actions import derive_actions
 from .observations import observations_from_state
+from .rewards import NullRewardFn, RewardFn
 from .types import Ants, Observations, State
 
 
@@ -19,11 +20,13 @@ class Thants(Environment):
         n_agents: int,
         decay_rate=0.05,
         dissipation_rate=0.0,
-    ):
+        reward_fn: Optional[RewardFn] = None,
+    ) -> None:
         self.dims = dims
         self.n_agents = n_agents
         self.decay_rate = decay_rate
         self.dissipation_rate = dissipation_rate
+        self.reward_fn = reward_fn or NullRewardFn()
         super().__init__()
 
     def reset(self, key: chex.PRNGKey) -> Tuple[State, TimeStep[Observations]]:
@@ -55,6 +58,7 @@ class Thants(Environment):
 
         # Apply movements
         new_pos = steps.update_positions(self.dims, state.ants.pos, actions.movements)
+
         # Pick up and drop-off food
         new_food, new_carrying = steps.update_food(
             state.food,
@@ -65,7 +69,6 @@ class Thants(Environment):
             1.0,
         )
         # Dissipate chemicals
-        # Decay chemicals
         new_signals = steps.update_signals(
             state.signals, self.dissipation_rate, self.decay_rate
         )
@@ -81,7 +84,7 @@ class Thants(Environment):
             nest=state.nest,
         )
         observations = observations_from_state(self.dims, new_state)
-        rewards = jnp.zeros((self.n_agents,))
+        rewards = self.reward_fn(old_state=state, new_state=new_state)
         timestep = transition(rewards, observations, shape=(self.n_agents,))
         return new_state, timestep
 
