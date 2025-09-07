@@ -7,12 +7,14 @@ from jumanji.testing.env_not_smoke import (
 )
 
 from thants import Thants
+from thants.generator import BasicGenerator
 from thants.types import Observations
 
 
 @pytest.fixture
 def env() -> Thants:
-    return Thants(dims=(50, 50), n_agents=100)
+    generator = BasicGenerator((50, 50), 100)
+    return Thants(generator=generator)
 
 
 def test_env_does_not_smoke(env: Thants) -> None:
@@ -20,7 +22,7 @@ def test_env_does_not_smoke(env: Thants) -> None:
     env.max_steps = 100
 
     def select_action(action_key: chex.PRNGKey, _state: Observations) -> chex.Array:
-        return jax.random.choice(action_key, 8, (env.n_agents,))
+        return jax.random.choice(action_key, 8, (env.num_agents,))
 
     check_env_does_not_smoke(env, select_action=select_action)
 

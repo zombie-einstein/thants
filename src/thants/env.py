@@ -11,6 +11,7 @@ from matplotlib.animation import FuncAnimation
 
 from . import steps
 from .actions import derive_actions
+from .generator import BasicGenerator, Generator
 from .observations import observations_from_state
 from .rewards import NullRewardFn, RewardFn
 from .types import Ants, Observations, State
@@ -20,44 +21,35 @@ from .viewer import ThantsViewer
 class Thants(Environment):
     def __init__(
         self,
-        dims: tuple[int, int],
-        n_agents: int,
         decay_rate=0.05,
         dissipation_rate=0.0,
+        generator: Optional[Generator] = None,
         reward_fn: Optional[RewardFn] = None,
         viewer: Optional[Viewer[State]] = None,
         max_steps: int = 1_000,
+        carry_capacity: float = 1.0,
     ) -> None:
-        self.dims = dims
-        self.n_agents = n_agents
         self.decay_rate = decay_rate
         self.dissipation_rate = dissipation_rate
-        self.reward_fn = reward_fn or NullRewardFn()
-        self.carry_capacity = 1.0
+        self.carry_capacity = carry_capacity
         self.max_steps = max_steps
-        self._viewer = viewer or ThantsViewer(self.dims)
+        self._generator = generator or BasicGenerator((100, 100), 25)
+        self.reward_fn = reward_fn or NullRewardFn()
+        self._viewer = viewer or ThantsViewer(self._generator.dims)
         super().__init__()
 
     def reset(self, key: chex.PRNGKey) -> Tuple[State, TimeStep[Observations]]:
-        food = jnp.zeros(self.dims, dtype=float)
-        signals = jnp.zeros(self.dims, dtype=float)
-        nest = jnp.zeros(self.dims, dtype=bool)
-        ant_pos = jnp.indices((5, self.n_agents // 5)).reshape(self.n_agents, 2)
-        ant_health = jnp.ones((self.n_agents,))
-        ant_carrying = jnp.zeros((self.n_agents,))
+        ants, nest, food = self._generator(key)
+        signals = jnp.zeros(self._generator.dims, dtype=float)
         state = State(
             step=0,
-            ants=Ants(
-                pos=ant_pos,
-                health=ant_health,
-                carrying=ant_carrying,
-            ),
+            ants=ants,
             food=food,
             signals=signals,
             nest=nest,
         )
-        observations = observations_from_state(self.dims, state)
-        time_step = restart(observation=observations, shape=(self.n_agents,))
+        observations = observations_from_state(self._generator.dims, state)
+        time_step = restart(observation=observations, shape=(self._generator.n_agents,))
         return state, time_step
 
     def step(
@@ -67,7 +59,9 @@ class Thants(Environment):
         actions = derive_actions(actions)
 
         # Apply movements
-        new_pos = steps.update_positions(self.dims, state.ants.pos, actions.movements)
+        new_pos = steps.update_positions(
+            self._generator.dims, state.ants.pos, actions.movements
+        )
 
         # Pick up and drop-off food
         new_food, new_carrying = steps.update_food(
@@ -94,7 +88,7 @@ class Thants(Environment):
             signals=new_signals,
             nest=state.nest,
         )
-        observations = observations_from_state(self.dims, new_state)
+        observations = observations_from_state(self._generator.dims, new_state)
         rewards = self.reward_fn(old_state=state, new_state=new_state)
         timestep = jax.lax.cond(
             state.step >= self.max_steps,
@@ -107,7 +101,7 @@ class Thants(Environment):
 
     @cached_property
     def num_agents(self) -> int:
-        return self.n_agents
+        return self._generator.n_agents
 
     @cached_property
     def observation_spec(self) -> specs.Spec[Observations]:
@@ -160,7 +154,7 @@ class Thants(Environment):
     @cached_property
     def action_spec(self) -> specs.BoundedArray:
         return specs.BoundedArray(
-            shape=(self.n_agents,),
+            shape=(self._generator.n_agents,),
             minimum=0,
             maximum=8,
             dtype=int,
@@ -169,7 +163,7 @@ class Thants(Environment):
     @cached_property
     def reward_spec(self) -> specs.Array:
         return specs.Array(
-            shape=(self.n_agents,),
+            shape=(self._generator.n_agents,),
             dtype=float,
         )
 
