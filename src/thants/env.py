@@ -1,17 +1,20 @@
 from functools import cached_property, partial
-from typing import Optional, Tuple
+from typing import Optional, Sequence, Tuple
 
 import chex
 import jax
 import jax.numpy as jnp
 from jumanji import Environment, specs
 from jumanji.types import TimeStep, restart, termination, transition
+from jumanji.viewer import Viewer
+from matplotlib.animation import FuncAnimation
 
 from . import steps
 from .actions import derive_actions
 from .observations import observations_from_state
 from .rewards import NullRewardFn, RewardFn
 from .types import Ants, Observations, State
+from .viewer import ThantsViewer
 
 
 class Thants(Environment):
@@ -22,6 +25,7 @@ class Thants(Environment):
         decay_rate=0.05,
         dissipation_rate=0.0,
         reward_fn: Optional[RewardFn] = None,
+        viewer: Optional[Viewer[State]] = None,
         max_steps: int = 1_000,
     ) -> None:
         self.dims = dims
@@ -31,6 +35,7 @@ class Thants(Environment):
         self.reward_fn = reward_fn or NullRewardFn()
         self.carry_capacity = 1.0
         self.max_steps = max_steps
+        self._viewer = viewer or ThantsViewer(self.dims)
         super().__init__()
 
     def reset(self, key: chex.PRNGKey) -> Tuple[State, TimeStep[Observations]]:
@@ -167,3 +172,35 @@ class Thants(Environment):
             shape=(self.n_agents,),
             dtype=float,
         )
+
+    def render(self, state: State) -> None:
+        """Render a frame of the environment for a given state using matplotlib.
+
+        Args:
+            state: State object.
+        """
+        self._viewer.render(state)
+
+    def animate(
+        self,
+        states: Sequence[State],
+        interval: int = 100,
+        save_path: Optional[str] = None,
+    ) -> FuncAnimation:
+        """Create an animation from a sequence of environment states.
+
+        Args:
+            states: sequence of environment states corresponding to consecutive
+                timesteps.
+            interval: delay between frames in milliseconds.
+            save_path: the path where the animation file should be saved. If it
+                is None, the plot will not be saved.
+
+        Returns:
+            Animation that can be saved as a GIF, MP4, or rendered with HTML.
+        """
+        return self._viewer.animate(states, interval=interval, save_path=save_path)
+
+    def close(self) -> None:
+        """Perform any necessary cleanup."""
+        self._viewer.close()
