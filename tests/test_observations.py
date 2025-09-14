@@ -1,10 +1,11 @@
+import chex
 import jax.numpy as jnp
 
 from thants.observations import observations_from_state
 from thants.types import Ants, Observations, State
 
 
-def test_observations_from_state():
+def test_observations_from_state(key: chex.PRNGKey) -> None:
     dims = (3, 2)
 
     ant_pos = jnp.array([[0, 0], [1, 1]])
@@ -17,6 +18,7 @@ def test_observations_from_state():
 
     state = State(
         step=0,
+        key=key,
         ants=Ants(
             pos=ant_pos,
             health=ant_health,

@@ -33,16 +33,20 @@ class Thants(Environment):
         self.dissipation_rate = dissipation_rate
         self.carry_capacity = carry_capacity
         self.max_steps = max_steps
-        self._generator = generator or BasicGenerator((100, 100), 25)
+        self._generator = generator or BasicGenerator(
+            (100, 100), 25, (5, 5), (5, 5), 100
+        )
         self.reward_fn = reward_fn or NullRewardFn()
         self._viewer = viewer or ThantsViewer(self._generator.dims)
         super().__init__()
 
     def reset(self, key: chex.PRNGKey) -> Tuple[State, TimeStep[Observations]]:
-        ants, nest, food = self._generator(key)
+        key, init_key = jax.random.split(key, num=2)
+        ants, nest, food = self._generator.init(init_key)
         signals = jnp.zeros(self._generator.dims, dtype=float)
         state = State(
             step=0,
+            key=key,
             ants=ants,
             food=food,
             signals=signals,
@@ -72,6 +76,9 @@ class Thants(Environment):
             state.ants.carrying,
             self.carry_capacity,
         )
+        # Drop any  new food
+        key, food_key = jax.random.split(state.key, num=2)
+        new_food = self._generator.update_food(food_key, state.step, new_food)
         # Dissipate chemicals
         new_signals = steps.update_signals(
             state.signals, self.dissipation_rate, self.decay_rate
@@ -83,6 +90,7 @@ class Thants(Environment):
 
         new_state = State(
             step=state.step + 1,
+            key=key,
             ants=Ants(pos=new_pos, health=state.ants.health, carrying=new_carrying),
             food=new_food,
             signals=new_signals,

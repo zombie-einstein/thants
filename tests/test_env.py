@@ -13,7 +13,13 @@ from thants.types import Observations
 
 @pytest.fixture
 def env() -> Thants:
-    generator = BasicGenerator((50, 50), 100)
+    generator = BasicGenerator(
+        (50, 50),
+        100,
+        (5, 5),
+        (2, 2),
+        50,
+    )
     return Thants(generator=generator)
 
 

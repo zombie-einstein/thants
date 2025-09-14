@@ -18,6 +18,7 @@ class Ants:
 @dataclass
 class State:
     step: int
+    key: chex.PRNGKey
     ants: Ants
     food: chex.Array
     signals: chex.Array
