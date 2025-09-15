@@ -14,6 +14,7 @@ from .actions import derive_actions
 from .generator import BasicGenerator, Generator
 from .observations import observations_from_state
 from .rewards import NullRewardFn, RewardFn
+from .signals import BasicSignalPropagator, SignalPropagator
 from .types import Ants, Observations, State
 from .viewer import ThantsViewer
 
@@ -21,22 +22,22 @@ from .viewer import ThantsViewer
 class Thants(Environment):
     def __init__(
         self,
-        decay_rate=0.05,
-        dissipation_rate=0.0,
         generator: Optional[Generator] = None,
+        signal_dynamics: Optional[SignalPropagator] = None,
         reward_fn: Optional[RewardFn] = None,
         viewer: Optional[Viewer[State]] = None,
         max_steps: int = 1_000,
         carry_capacity: float = 1.0,
     ) -> None:
-        self.decay_rate = decay_rate
-        self.dissipation_rate = dissipation_rate
         self.carry_capacity = carry_capacity
         self.max_steps = max_steps
         self._generator = generator or BasicGenerator(
             (100, 100), 25, (5, 5), (5, 5), 100
         )
-        self.reward_fn = reward_fn or NullRewardFn()
+        self._signal_dynamics = signal_dynamics or BasicSignalPropagator(
+            decay_rate=0.002, dissipation_rate=0.2
+        )
+        self._reward_fn = reward_fn or NullRewardFn()
         self._viewer = viewer or ThantsViewer(self._generator.dims)
         super().__init__()
 
@@ -59,6 +60,8 @@ class Thants(Environment):
     def step(
         self, state: State, actions: chex.Array
     ) -> Tuple[State, TimeStep[Observations]]:
+        key, food_key, signals_key = jax.random.split(state.key, num=3)
+
         # Unwrap actions
         actions = derive_actions(actions)
 
@@ -76,13 +79,10 @@ class Thants(Environment):
             state.ants.carrying,
             self.carry_capacity,
         )
-        # Drop any  new food
-        key, food_key = jax.random.split(state.key, num=2)
+        # Drop any new food
         new_food = self._generator.update_food(food_key, state.step, new_food)
-        # Dissipate chemicals
-        new_signals = steps.update_signals(
-            state.signals, self.dissipation_rate, self.decay_rate
-        )
+        # Propagate / disperse signals
+        new_signals = self._signal_dynamics(signals_key, state.signals)
         # Deposit signals
         new_signals = steps.deposit_signals(
             new_signals, new_pos, actions.deposit_signals
@@ -97,7 +97,7 @@ class Thants(Environment):
             nest=state.nest,
         )
         observations = observations_from_state(self._generator.dims, new_state)
-        rewards = self.reward_fn(old_state=state, new_state=new_state)
+        rewards = self._reward_fn(old_state=state, new_state=new_state)
         timestep = jax.lax.cond(
             state.step >= self.max_steps,
             partial(termination, shape=(self.num_agents,)),

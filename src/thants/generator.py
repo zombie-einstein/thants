@@ -57,7 +57,7 @@ class BasicGenerator(Generator):
         dims = jnp.array(self.dims)
         centre = (dims // 2)[jnp.newaxis]
 
-        d = math.isqrt(self.n_agents) + 1
+        d = math.ceil(math.sqrt(self.n_agents))
         ant_pos = get_rectangular_indices((d, d))[: self.n_agents]
         ant_pos = ant_pos + centre - jnp.array([[d, d]]) // 2
         ant_pos = ant_pos % dims
