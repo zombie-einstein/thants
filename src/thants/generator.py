@@ -7,6 +7,7 @@ import jax.numpy as jnp
 import jax.random
 
 from .types import Ants
+from .utils import get_rectangular_indices
 
 
 class Generator(abc.ABC):
@@ -42,10 +43,9 @@ class BasicGenerator(Generator):
         super().__init__(dims, n_agents)
 
     def _drop_food(self, key: chex.PRNGKey, food: chex.Array) -> chex.Array:
-        n_food = math.prod(self.food_dims)
         dims = jnp.array(self.dims)
         food_off = jax.random.randint(key, (2,), jnp.zeros((2,)), dims)
-        food_idxs = jnp.indices(self.food_dims).reshape(2, n_food).T
+        food_idxs = get_rectangular_indices(self.food_dims)
         food_idxs = food_idxs + food_off
         food_idxs = food_idxs % dims
         food = food.at[food_idxs[:, 0], food_idxs[:, 1]].add(self.drop_amount)
@@ -58,7 +58,7 @@ class BasicGenerator(Generator):
         centre = (dims // 2)[jnp.newaxis]
 
         d = math.isqrt(self.n_agents) + 1
-        ant_pos = jnp.indices((d, d)).reshape(2, d * d).T[: self.n_agents]
+        ant_pos = get_rectangular_indices((d, d))[: self.n_agents]
         ant_pos = ant_pos + centre - jnp.array([[d, d]]) // 2
         ant_pos = ant_pos % dims
 
@@ -66,8 +66,7 @@ class BasicGenerator(Generator):
         ant_carrying = jnp.zeros((self.n_agents,))
         ants = Ants(pos=ant_pos, health=ant_health, carrying=ant_carrying)
 
-        n_nest = math.prod(self.nest_dims)
-        nest_idxs = jnp.indices(self.nest_dims).reshape(2, n_nest).T
+        nest_idxs = get_rectangular_indices(self.nest_dims)
         nest_idxs = nest_idxs + centre - jnp.array(self.nest_dims) // 2
         nest_idxs = nest_idxs % dims
         nest = jnp.zeros(self.dims, dtype=bool)
