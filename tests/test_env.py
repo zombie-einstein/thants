@@ -28,7 +28,7 @@ def test_env_does_not_smoke(env: Thants) -> None:
     env.max_steps = 100
 
     def select_action(action_key: chex.PRNGKey, _state: Observations) -> chex.Array:
-        return jax.random.choice(action_key, 8, (env.num_agents,))
+        return jax.random.choice(action_key, 9, (env.num_agents,))
 
     check_env_does_not_smoke(env, select_action=select_action)
 

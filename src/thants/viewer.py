@@ -15,8 +15,9 @@ def draw_env(dims: tuple[int, int], state: State) -> tuple[chex.Array, chex.Arra
     frame = jnp.zeros(dims)
     ants = frame.at[state.ants.pos[:, 0], state.ants.pos[:, 1]].set(1.0)
     env = jnp.stack([ants, state.food, state.nest], axis=2)
-    fill = jnp.ones(dims)
-    signals = jnp.stack([fill, fill, fill, state.signals], axis=2)
+    signals = jnp.stack(
+        [state.signals[0], state.signals[1], frame, frame + 0.5], axis=2
+    )
     return env, signals
 
 

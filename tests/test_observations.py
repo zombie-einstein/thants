@@ -13,7 +13,7 @@ def test_observations_from_state(key: chex.PRNGKey) -> None:
     ant_carry = jnp.zeros(2)
 
     food = jnp.zeros(dims)
-    signals = jnp.zeros(dims)
+    signals = jnp.zeros((2, dims[0], dims[1]))
     nest = jnp.zeros(dims)
 
     state = State(
@@ -35,6 +35,6 @@ def test_observations_from_state(key: chex.PRNGKey) -> None:
 
     assert observations.ants.shape == (2, 9)
     assert observations.food.shape == (2, 9)
-    assert observations.signals.shape == (2, 9)
+    assert observations.signals.shape == (2, 2, 9)
     assert observations.nest.shape == (2, 9)
     assert observations.carrying.shape == (2,)

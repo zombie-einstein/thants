@@ -1,7 +1,7 @@
 import chex
 import jax.numpy as jnp
 
-from .types import Actions
+from .types import Actions, SignalActions
 
 
 def derive_actions(actions: chex.Array) -> Actions:
@@ -12,7 +12,11 @@ def derive_actions(actions: chex.Array) -> Actions:
 
     take_food = jnp.where(actions == 5, 0.1, 0)
     deposit_food = jnp.where(actions == 6, 0.1, 0)
-    deposit_signals = jnp.where(actions == 7, 0.1, 0)
+
+    deposit_signals = SignalActions(
+        idx=jnp.maximum(actions - 7, 0),
+        amount=jnp.where(actions > 6, 0.1, 0),
+    )
 
     return Actions(
         movements=movements,

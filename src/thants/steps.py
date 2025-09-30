@@ -1,6 +1,8 @@
 import chex
 import jax.numpy as jnp
 
+from .types import SignalActions
+
 
 def update_positions(
     dims: tuple[int, int], pos: chex.Array, updates: chex.Array
@@ -43,7 +45,7 @@ def update_signals(
 
 
 def deposit_signals(
-    signals: chex.Array, pos: chex.Array, deposits: chex.Array
+    signals: chex.Array, pos: chex.Array, deposits: SignalActions
 ) -> chex.Array:
-    new_signals = signals.at[pos[:, 0], pos[:, 1]].add(deposits)
+    new_signals = signals.at[deposits.idx, pos[:, 0], pos[:, 1]].add(deposits.amount)
     return new_signals

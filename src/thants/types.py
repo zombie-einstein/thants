@@ -26,11 +26,17 @@ class State:
 
 
 @dataclass
+class SignalActions:
+    idx: chex.Array  # (n_ants,)
+    amount: chex.Array  # (n_ants,)
+
+
+@dataclass
 class Actions:
     movements: chex.Array  # (n_ants, 2)
     take_food: chex.Array  # (n_ants,)
     deposit_food: chex.Array  # (n_ants,)
-    deposit_signals: chex.Array  # (n_ants,)
+    deposit_signals: SignalActions
 
 
 @dataclass

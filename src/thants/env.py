@@ -31,11 +31,11 @@ class Thants(Environment):
     ) -> None:
         self.carry_capacity = carry_capacity
         self.max_steps = max_steps
+        self._signal_dynamics = signal_dynamics or BasicSignalPropagator(
+            n_signals=2, decay_rate=0.002, dissipation_rate=0.2
+        )
         self._generator = generator or BasicGenerator(
             (100, 100), 25, (5, 5), (5, 5), 100
-        )
-        self._signal_dynamics = signal_dynamics or BasicSignalPropagator(
-            decay_rate=0.002, dissipation_rate=0.2
         )
         self._reward_fn = reward_fn or NullRewardFn()
         self._viewer = viewer or ThantsViewer(self._generator.dims)
@@ -44,7 +44,9 @@ class Thants(Environment):
     def reset(self, key: chex.PRNGKey) -> Tuple[State, TimeStep[Observations]]:
         key, init_key = jax.random.split(key, num=2)
         ants, nest, food = self._generator.init(init_key)
-        signals = jnp.zeros(self._generator.dims, dtype=float)
+        signals = jnp.zeros(
+            (self._signal_dynamics.n_signals, *self._generator.dims), dtype=float
+        )
         state = State(
             step=0,
             key=key,
@@ -128,7 +130,7 @@ class Thants(Environment):
             name="food",
         )
         signals = specs.BoundedArray(
-            shape=(self.num_agents, 9),
+            shape=(self.num_agents, self._signal_dynamics.n_signals, 9),
             minimum=0.0,
             maximum=jnp.inf,
             dtype=float,
@@ -164,7 +166,7 @@ class Thants(Environment):
         return specs.BoundedArray(
             shape=(self._generator.n_agents,),
             minimum=0,
-            maximum=8,
+            maximum=7 + self._signal_dynamics.n_signals,
             dtype=int,
         )
 
