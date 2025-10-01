@@ -5,7 +5,26 @@ import jax.numpy as jnp
 from .types import Observations, State
 
 
-def observations_from_state(dims: tuple[int, int], state: State) -> Observations:
+def observations_from_state(state: State) -> Observations:
+    """
+    Generate individual agent observations from state
+
+    Parameters
+    ----------
+    state
+        Environment state
+
+    Returns
+    -------
+    Observations
+        Struct containing observation components
+
+        - Local neighbourhood with flags indicating neighbouring ants
+        - Food amounts in the local neighbourhood
+        - Local neighbourhood indicating if a cell is a nest
+        - Deposited signals in the local neighbourhood
+    """
+    dims = state.nest.shape
     idxs = jnp.indices((3, 3))
     idxs = idxs.swapaxes(0, 2).reshape(9, 2) - 1
     dims_arr = jnp.array([dims])

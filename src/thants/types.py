@@ -10,6 +10,14 @@ else:
 
 @dataclass
 class Ants:
+    """
+    Ant states
+
+    pos: Indices of ant grid positions
+    health: Ant health values
+    carrying: Amount of food being carried by ants
+    """
+
     pos: chex.Array  # (n_ants, 2)
     health: chex.Array  # (n_ants,)
     carrying: chex.Array  # (n_ants,)
@@ -17,22 +25,47 @@ class Ants:
 
 @dataclass
 class State:
+    """
+    Environment state
+
+    step: Environment step
+    key: JAX random key
+    ants: Ant states
+    food: Environment food deposit state
+    """
+
     step: int
     key: chex.PRNGKey
     ants: Ants
-    food: chex.Array
-    signals: chex.Array
-    nest: chex.Array
+    food: chex.Array  # [*env-size]
+    signals: chex.Array  # [n-signals, *env-size]
+    nest: chex.Array  # [*env-size]
 
 
 @dataclass
 class SignalActions:
-    idx: chex.Array  # (n_ants,)
+    """
+    Agent deposit signal actions
+
+    channel: Channel to deposit signals on
+    amount: Amount to deposit
+    """
+
+    channel: chex.Array  # (n_ants,)
     amount: chex.Array  # (n_ants,)
 
 
 @dataclass
 class Actions:
+    """
+    Ant action environment updates
+
+    movements: Movement actions to apply to ant positions
+    take_food: Food amounts to be picked up by ants
+    deposit_food: Food amounts to be dropped by ants
+    deposit_signals: Signal deposit channels and amounts
+    """
+
     movements: chex.Array  # (n_ants, 2)
     take_food: chex.Array  # (n_ants,)
     deposit_food: chex.Array  # (n_ants,)
@@ -41,8 +74,18 @@ class Actions:
 
 @dataclass
 class Observations:
+    """
+    Agent observations
+
+    ants: Flag indicating if cells in the local neighbourhood are occupied by an ant
+    food: Amount of food deposited in neighbouring cells
+    signals: Signal deposits in neighbouring cells
+    nest: Flag indicating if cells in the local neighbourhood are nest cells
+    carrying: Food amount being held
+    """
+
     ants: chex.Array  # (n_ants, 9)
     food: chex.Array  # (n_ants, 9)
-    signals: chex.Array  # (n_ants, 9)
+    signals: chex.Array  # (n_ants, n-channels, 9)
     nest: chex.Array  # (n_ants, 9)
     carrying: chex.Array  # (n_ants,)

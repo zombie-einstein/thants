@@ -1,3 +1,6 @@
+"""
+Environment update steps
+"""
 import chex
 import jax.numpy as jnp
 
@@ -7,6 +10,23 @@ from .types import SignalActions
 def update_positions(
     dims: tuple[int, int], pos: chex.Array, updates: chex.Array
 ) -> chex.Array:
+    """
+    Update agent positions
+
+    Parameters
+    ----------
+    dims
+        Environment dimensions
+    pos
+        Ant positions
+    updates
+        Array of position updates
+
+    Returns
+    -------
+    chex.Array
+        Updated agent positions
+    """
     dims_arr = jnp.array([dims])
     new_pos = (pos + updates) % dims_arr
     x = jnp.concatenate([pos[:, 1], new_pos[:, 1]])
@@ -26,6 +46,32 @@ def update_food(
     carrying: chex.Array,
     capacity: float,
 ) -> tuple[chex.Array, chex.Array]:
+    """
+    Update food piles due to ant actions
+
+    Parameters
+    ----------
+    food
+        Food deposit state array
+    pos
+        Ant positions
+    take
+        Food pick-up action amounts for individual ants
+    deposit
+        Food pick-up deposit amounts for individual ants
+    carrying
+        Current ant carrying amounts
+    capacity
+        Ant carrying capacity
+
+    Returns
+    -------
+    tuple[chex.Array, chex.Array]
+        Tuple containing
+
+        - Update food deposit state
+        - Updated ant carrying amounts
+    """
     available_food = food.at[pos[:, 0], pos[:, 1]].get()
     available_capacity = capacity - carrying
     taken_food = jnp.minimum(jnp.minimum(available_food, take), available_capacity)
@@ -36,16 +82,27 @@ def update_food(
     return new_food, new_carrying
 
 
-def update_signals(
-    signals: chex.Array, dissipation_rate: float, decay_rate: float
-) -> chex.Array:
-    signals = jnp.maximum(signals - decay_rate, 0.0)
-    # TODO: Dissipation?
-    return signals
-
-
 def deposit_signals(
     signals: chex.Array, pos: chex.Array, deposits: SignalActions
 ) -> chex.Array:
-    new_signals = signals.at[deposits.idx, pos[:, 0], pos[:, 1]].add(deposits.amount)
+    """
+    Deposit signals at ant locations
+
+    Parameters
+    ----------
+    signals
+        Signal state
+    pos
+        Ant positions
+    deposits
+        Amount to deposit by each ant
+
+    Returns
+    -------
+    chex.Array
+        Updated signal state
+    """
+    new_signals = signals.at[deposits.channel, pos[:, 0], pos[:, 1]].add(
+        deposits.amount
+    )
     return new_signals

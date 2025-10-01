@@ -29,7 +29,7 @@ def test_observations_from_state(key: chex.PRNGKey) -> None:
         nest=nest,
     )
 
-    observations = observations_from_state(dims, state)
+    observations = observations_from_state(state)
 
     assert isinstance(observations, Observations)
 

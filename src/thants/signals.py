@@ -5,16 +5,63 @@ import jax.numpy as jnp
 
 
 class SignalPropagator(abc.ABC):
+    """
+    Signal dynamics base-class
+    """
+
     def __init__(self, n_signal: int) -> None:
+        """
+        Initialise base signal propagator
+
+        Parameters
+        ----------
+        n_signal
+            Number of distinct signal channels
+        """
         self.n_signals = n_signal
 
     @abc.abstractmethod
     def __call__(self, key: chex.PRNGKey, signals: chex.Array) -> chex.Array:
-        """Update signal state"""
+        """
+        Generate updated signal state
+
+        Parameters
+        ----------
+        key
+            JAX random key
+        signals
+            Signal state array
+
+        Returns
+        -------
+        chex.Array
+            New signal state
+        """
 
 
 class BasicSignalPropagator(SignalPropagator):
+    """
+    Basic signal propagator
+
+    Propagator that applies two steps:
+
+    - Dissipate signal by subtracting a fixed amount from all deposits
+    - Propagate signals by sharing a fraction of all deposits to neighbouring cells
+    """
+
     def __init__(self, n_signals: int, decay_rate: float, dissipation_rate) -> None:
+        """
+        Initialise a basic propagator
+
+        Parameters
+        ----------
+        n_signals
+            Number of signal channels
+        decay_rate
+            Amount removed from deposits each step
+        dissipation_rate
+            Fraction of deposit shared with neighbouring cells
+        """
         self.decay_rate = decay_rate
         self.dissipation_rate = dissipation_rate
         super().__init__(n_signals)

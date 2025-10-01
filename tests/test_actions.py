@@ -25,10 +25,12 @@ def test_derive_actions() -> None:
     i = jnp.array([7, 8])
 
     expected_deposit_signals = SignalActions(
-        idx=jnp.zeros((9,)).at[i].set(jnp.arange(2)),
+        channel=jnp.zeros((9,)).at[i].set(jnp.arange(2)),
         amount=jnp.zeros((9,)).at[i].set(0.1),
     )
 
     assert isinstance(actions.deposit_signals, SignalActions)
     assert jnp.allclose(actions.deposit_signals.amount, expected_deposit_signals.amount)
-    assert jnp.array_equal(actions.deposit_signals.idx, expected_deposit_signals.idx)
+    assert jnp.array_equal(
+        actions.deposit_signals.channel, expected_deposit_signals.channel
+    )

@@ -20,6 +20,10 @@ from .viewer import ThantsViewer
 
 
 class Thants(Environment):
+    """
+    Thants environment
+    """
+
     def __init__(
         self,
         generator: Optional[Generator] = None,
@@ -29,6 +33,30 @@ class Thants(Environment):
         max_steps: int = 1_000,
         carry_capacity: float = 1.0,
     ) -> None:
+        """
+        Initialise the environment
+
+        Parameters
+        ----------
+        generator
+            Initial state generator, initialises ants, food and nest values.
+            By default, implements a `BasicGenerator` for a 100x100 space
+            and 25 agents. The generator is also responsible for depositing
+            new food during the simulation.
+        signal_dynamics
+            Signal propagation functionality
+            By default, implements a `BasicSignalPropagator` with 2 signal values.
+        reward_fn
+            Reward function, by default implements a default function that assigns
+            0 rewards to all agents.
+        viewer
+            Environment visualiser. By default, initialises a viewer using a Matplotlib
+            backend.
+        max_steps
+            Maximum environment steps
+        carry_capacity
+            Maximum ant carrying capacity
+        """
         self.carry_capacity = carry_capacity
         self.max_steps = max_steps
         self._signal_dynamics = signal_dynamics or BasicSignalPropagator(
@@ -42,6 +70,19 @@ class Thants(Environment):
         super().__init__()
 
     def reset(self, key: chex.PRNGKey) -> Tuple[State, TimeStep[Observations]]:
+        """
+        Reset the environment state
+
+        Parameters
+        ----------
+        key
+            JAX random key
+
+        Returns
+        -------
+        tuple[State, TimeStep]
+            Tuple containing new environment state, and initial timestep
+        """
         key, init_key = jax.random.split(key, num=2)
         ants, nest, food = self._generator.init(init_key)
         signals = jnp.zeros(
@@ -55,13 +96,36 @@ class Thants(Environment):
             signals=signals,
             nest=nest,
         )
-        observations = observations_from_state(self._generator.dims, state)
+        observations = observations_from_state(state)
         time_step = restart(observation=observations, shape=(self._generator.n_agents,))
         return state, time_step
 
     def step(
         self, state: State, actions: chex.Array
     ) -> Tuple[State, TimeStep[Observations]]:
+        """
+        Update the state of the environment
+
+        Update performs the following steps
+
+        - Unwrap actions into state updates
+        - Apply position updates
+        - Apply food pick-up/deposit updates
+        - Dissipate and propagate signals
+        - Apply signal deposit actions
+
+        Parameters
+        ----------
+        state
+            Current environment state
+        actions
+            Array of individual ant actions
+
+        Returns
+        -------
+        tuple[State, TimeStep]
+            Tuple containing new state and TimeStep
+        """
         key, food_key, signals_key = jax.random.split(state.key, num=3)
 
         # Unwrap actions
@@ -98,7 +162,7 @@ class Thants(Environment):
             signals=new_signals,
             nest=state.nest,
         )
-        observations = observations_from_state(self._generator.dims, new_state)
+        observations = observations_from_state(new_state)
         rewards = self._reward_fn(old_state=state, new_state=new_state)
         timestep = jax.lax.cond(
             state.step >= self.max_steps,
@@ -115,6 +179,21 @@ class Thants(Environment):
 
     @cached_property
     def observation_spec(self) -> specs.Spec[Observations]:
+        """
+        Observation specification
+
+        The observation consists of several components:
+
+        - `[n-agents, 9]` view of ants in the local vicinity
+        - `[n-agents, 9]` view of food deposits in local vicinity
+        - `[n-agents, n-signals, 9]` view of signals in the local vicinity
+        - `[n-agents, n-signals, 9]` view indicating nest locations in the vicinity
+        - `[n_agents,]` amount of food being carried by ants
+
+        Returns
+        -------
+        ObservationSpec
+        """
         ants = specs.BoundedArray(
             shape=(self.num_agents, 9),
             minimum=0.0,
@@ -163,6 +242,16 @@ class Thants(Environment):
 
     @cached_property
     def action_spec(self) -> specs.BoundedArray:
+        """
+        Action specification
+
+        Actions are given by an array of integers indicating the discrete action
+        to be taken by each ant.
+
+        Returns
+        -------
+        ActionSpec
+        """
         return specs.BoundedArray(
             shape=(self._generator.n_agents,),
             minimum=0,
@@ -172,6 +261,15 @@ class Thants(Environment):
 
     @cached_property
     def reward_spec(self) -> specs.Array:
+        """
+        Reward specification
+
+        Array of rewards for each ant agent
+
+        Returns
+        -------
+        RewardSpec
+        """
         return specs.Array(
             shape=(self._generator.n_agents,),
             dtype=float,
