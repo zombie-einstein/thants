@@ -44,7 +44,15 @@ def observations_from_state(state: State) -> Observations:
     food = jax.vmap(get_view, in_axes=(None, 0))(state.food, view_idxs)
     signals = jax.vmap(get_signals, in_axes=(None, 0))(state.signals, view_idxs)
     nest = jax.vmap(get_view, in_axes=(None, 0))(state.nest, view_idxs).astype(float)
+    terrain = jax.vmap(get_view, in_axes=(None, 0))(state.terrain, view_idxs).astype(
+        float
+    )
 
     return Observations(
-        ants=ants, food=food, signals=signals, nest=nest, carrying=state.ants.carrying
+        ants=ants,
+        food=food,
+        signals=signals,
+        nest=nest,
+        carrying=state.ants.carrying,
+        terrain=terrain,
     )

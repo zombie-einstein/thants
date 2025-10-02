@@ -24,7 +24,6 @@ def draw_env(dims: tuple[int, int], state: State) -> tuple[chex.Array, chex.Arra
 class ThantsViewer(MatplotlibViewer[State]):
     def __init__(
         self,
-        env_dims: tuple[int, int],
         name: str = "thants",
         render_mode: str = "human",
     ) -> None:
@@ -38,7 +37,6 @@ class ThantsViewer(MatplotlibViewer[State]):
         render_mode
             Default ``human``
         """
-        self.env_dims = env_dims
         super().__init__(name, render_mode)
 
     def render(
@@ -92,13 +90,14 @@ class ThantsViewer(MatplotlibViewer[State]):
 
         fig, ax = self._get_fig_ax(name_suffix="_animation", show=False)
         plt.close(fig=fig)
+        env_dims = states[0].terrain.shape
 
-        env, signals = draw_env(self.env_dims, states[0])
+        env, signals = draw_env(env_dims, states[0])
         env_img = ax.imshow(env)
         signal_img = ax.imshow(signals)
 
         def make_frame(state: State) -> tuple[AxesImage, AxesImage]:
-            step_env, step_signals = draw_env(self.env_dims, state)
+            step_env, step_signals = draw_env(env_dims, state)
             env_img.set_data(step_env)
             signal_img.set_data(step_signals)
             return env_img, signal_img
@@ -118,7 +117,8 @@ class ThantsViewer(MatplotlibViewer[State]):
 
     def _draw(self, ax: plt.Axes, state: State) -> None:
         ax.clear()
-        env, signals = draw_env(self.env_dims, state)
+        env_dims = state.terrain.shape
+        env, signals = draw_env(env_dims, state)
         ax.imshow(env)
         ax.imshow(signals)
 

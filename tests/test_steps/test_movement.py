@@ -28,8 +28,10 @@ def test_movement(
 ) -> None:
     pos = jnp.array(pos)
     updates = jnp.array(updates)
+    dims = (2, 3)
+    terrain = jnp.ones(dims, dtype=bool)
 
-    new_pos = update_positions((2, 3), pos, updates)
+    new_pos = update_positions((2, 3), pos, terrain, updates)
 
     expected = jnp.array(expected)
 
@@ -39,6 +41,7 @@ def test_movement(
 def test_fuzz_movement(key: chex.PRNGKey) -> None:
     n_agents = 20
     dims = (12, 5)
+    terrain = jnp.ones(dims, dtype=bool)
     n_cells = dims[0] * dims[1]
     pos_idx = jax.random.choice(key, n_cells, shape=(n_agents,), replace=False)
     pos_x = pos_idx % dims[1]
@@ -50,7 +53,7 @@ def test_fuzz_movement(key: chex.PRNGKey) -> None:
         k, pos = carry
         k, move_key = jax.random.split(k)
         moves = jax.random.choice(move_key, movements, shape=(n_agents,))
-        new_pos = update_positions(dims, pos, moves)
+        new_pos = update_positions(dims, pos, terrain, moves)
         return (k, new_pos), pos
 
     (_, final_pos), positions = jax.lax.scan(step, (key, start_pos), None, length=50)

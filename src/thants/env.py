@@ -15,6 +15,7 @@ from .generator import BasicGenerator, Generator
 from .observations import observations_from_state
 from .rewards import NullRewardFn, RewardFn
 from .signals import BasicSignalPropagator, SignalPropagator
+from .terrain import OpenTerrainGenerator, TerrainGenerator
 from .types import Ants, Observations, State
 from .viewer import ThantsViewer
 
@@ -26,6 +27,8 @@ class Thants(Environment):
 
     def __init__(
         self,
+        dims: tuple[int, int],
+        terrain_generator: Optional[TerrainGenerator] = None,
         generator: Optional[Generator] = None,
         signal_dynamics: Optional[SignalPropagator] = None,
         reward_fn: Optional[RewardFn] = None,
@@ -57,16 +60,16 @@ class Thants(Environment):
         carry_capacity
             Maximum ant carrying capacity
         """
+        self.dims = dims
         self.carry_capacity = carry_capacity
         self.max_steps = max_steps
+        self._terrain_generator = terrain_generator or OpenTerrainGenerator()
         self._signal_dynamics = signal_dynamics or BasicSignalPropagator(
             n_signals=2, decay_rate=0.002, dissipation_rate=0.2
         )
-        self._generator = generator or BasicGenerator(
-            (100, 100), 25, (5, 5), (5, 5), 100
-        )
+        self._generator = generator or BasicGenerator(dims, 25, (5, 5), (5, 5), 100)
         self._reward_fn = reward_fn or NullRewardFn()
-        self._viewer = viewer or ThantsViewer(self._generator.dims)
+        self._viewer = viewer or ThantsViewer()
         super().__init__()
 
     def reset(self, key: chex.PRNGKey) -> Tuple[State, TimeStep[Observations]]:
@@ -83,11 +86,12 @@ class Thants(Environment):
         tuple[State, TimeStep]
             Tuple containing new environment state, and initial timestep
         """
-        key, init_key = jax.random.split(key, num=2)
+        key, init_key, terrain_key = jax.random.split(key, num=3)
         ants, nest, food = self._generator.init(init_key)
         signals = jnp.zeros(
             (self._signal_dynamics.n_signals, *self._generator.dims), dtype=float
         )
+        terrain = self._terrain_generator(self.dims, terrain_key)
         state = State(
             step=0,
             key=key,
@@ -95,6 +99,7 @@ class Thants(Environment):
             food=food,
             signals=signals,
             nest=nest,
+            terrain=terrain,
         )
         observations = observations_from_state(state)
         time_step = restart(observation=observations, shape=(self._generator.n_agents,))
@@ -133,7 +138,7 @@ class Thants(Environment):
 
         # Apply movements
         new_pos = steps.update_positions(
-            self._generator.dims, state.ants.pos, actions.movements
+            self._generator.dims, state.ants.pos, state.terrain, actions.movements
         )
 
         # Pick up and drop-off food
@@ -161,6 +166,7 @@ class Thants(Environment):
             food=new_food,
             signals=new_signals,
             nest=state.nest,
+            terrain=state.terrain,
         )
         observations = observations_from_state(new_state)
         rewards = self._reward_fn(old_state=state, new_state=new_state)
@@ -222,6 +228,13 @@ class Thants(Environment):
             dtype=float,
             name="nest",
         )
+        terrain = specs.BoundedArray(
+            shape=(self.num_agents, 9),
+            minimum=0.0,
+            maximum=1.0,
+            dtype=float,
+            name="terrain",
+        )
         carrying = specs.BoundedArray(
             shape=(self.num_agents,),
             minimum=0.0,
@@ -238,6 +251,7 @@ class Thants(Environment):
             signals=signals,
             nest=nest,
             carrying=carrying,
+            terrain=terrain,
         )
 
     @cached_property

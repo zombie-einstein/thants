@@ -8,7 +8,7 @@ from .types import SignalActions
 
 
 def update_positions(
-    dims: tuple[int, int], pos: chex.Array, updates: chex.Array
+    dims: tuple[int, int], pos: chex.Array, terrain: chex.Array, updates: chex.Array
 ) -> chex.Array:
     """
     Update agent positions
@@ -19,6 +19,8 @@ def update_positions(
         Environment dimensions
     pos
         Ant positions
+    terrain
+        Environment terrain
     updates
         Array of position updates
 
@@ -34,7 +36,9 @@ def update_positions(
     idxs = y * dims[1] + x
     occupation = jnp.bincount(idxs, length=dims[0] * dims[1]).reshape(*dims)
     move_occupied = occupation.at[new_pos[:, 0], new_pos[:, 1]].get() - 1
-    new_pos = jnp.where(move_occupied[:, jnp.newaxis] > 0, pos, new_pos)
+    passable = terrain.at[new_pos[:, 0], new_pos[:, 1]].get()
+    move_available = jnp.logical_and(move_occupied < 1, passable)
+    new_pos = jnp.where(move_available[:, jnp.newaxis], new_pos, pos)
     return new_pos
 
 

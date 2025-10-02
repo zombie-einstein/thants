@@ -32,14 +32,18 @@ class State:
     key: JAX random key
     ants: Ant states
     food: Environment food deposit state
+    signals: Ant deposited signals
+    nest: FLag indicating nest designated cells
+    terrain: Flag indicating if a cell is passable by ants
     """
 
     step: int
     key: chex.PRNGKey
     ants: Ants
     food: chex.Array  # [*env-size]
-    signals: chex.Array  # [n-signals, *env-size]
+    signals: chex.Array  # [n-signal-channels, *env-size]
     nest: chex.Array  # [*env-size]
+    terrain: chex.Array  # [*env-size]
 
 
 @dataclass
@@ -81,6 +85,7 @@ class Observations:
     food: Amount of food deposited in neighbouring cells
     signals: Signal deposits in neighbouring cells
     nest: Flag indicating if cells in the local neighbourhood are nest cells
+    terrain: Passable/impassable cells in the neighbourhood
     carrying: Food amount being held
     """
 
@@ -88,4 +93,5 @@ class Observations:
     food: chex.Array  # (n_ants, 9)
     signals: chex.Array  # (n_ants, n-channels, 9)
     nest: chex.Array  # (n_ants, 9)
+    terrain: chex.Array  # (n_ants, 9)
     carrying: chex.Array  # (n_ants,)

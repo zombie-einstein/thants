@@ -13,14 +13,15 @@ from thants.types import Observations
 
 @pytest.fixture
 def env() -> Thants:
+    dims = (50, 50)
     generator = BasicGenerator(
-        (50, 50),
+        dims,
         100,
         (5, 5),
         (2, 2),
         50,
     )
-    return Thants(generator=generator)
+    return Thants(dims=dims, generator=generator)
 
 
 def test_env_does_not_smoke(env: Thants) -> None:

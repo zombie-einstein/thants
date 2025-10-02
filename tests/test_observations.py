@@ -15,6 +15,7 @@ def test_observations_from_state(key: chex.PRNGKey) -> None:
     food = jnp.zeros(dims)
     signals = jnp.zeros((2, dims[0], dims[1]))
     nest = jnp.zeros(dims)
+    terrain = jnp.ones(dims, dtype=bool)
 
     state = State(
         step=0,
@@ -27,6 +28,7 @@ def test_observations_from_state(key: chex.PRNGKey) -> None:
         food=food,
         signals=signals,
         nest=nest,
+        terrain=terrain,
     )
 
     observations = observations_from_state(state)
@@ -37,4 +39,5 @@ def test_observations_from_state(key: chex.PRNGKey) -> None:
     assert observations.food.shape == (2, 9)
     assert observations.signals.shape == (2, 2, 9)
     assert observations.nest.shape == (2, 9)
+    assert observations.terrain.shape == (2, 9)
     assert observations.carrying.shape == (2,)

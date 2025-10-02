@@ -29,6 +29,7 @@ The state of the environment is represented by several component:
 - *Nest*: Array indicating if a cell is designated as a nest
 - *Signals*: Array of signal deposits at each cell. Signals can have several channels
   to facilitate ant communication.
+- *Terrain*: Array of flags indicating if a cell can be occupied by an ant.
 
 As well as updates due to agent actions, signal and food states are updated
 according due to environmental factors, e.g. signal decay and dispersion, or
@@ -59,6 +60,7 @@ own cell:
 - `signals`: Signal deposits in the neighbourhood (across all channels)
 - `food`: Food deposits within the neighbourhood
 - `nest`: Flag indicating if a neighbouring cell is designated as a nest
+- `terrain`: Flag indicating if a neighbouring cell can be occupied
 
 ### Rewards
 
