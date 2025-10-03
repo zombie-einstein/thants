@@ -9,21 +9,21 @@ from jumanji.types import TimeStep, restart, termination, transition
 from jumanji.viewer import Viewer
 from matplotlib.animation import FuncAnimation
 
+from thants.basic.generators.ants import AntGenerator, BasicAntGenerator
+from thants.basic.observations import observations_from_state
+from thants.basic.rewards import NullRewardFn, RewardFn
+from thants.basic.steps import update_positions
+from thants.basic.types import State
+from thants.basic.viewer import ThantsViewer
+from thants.common.actions import derive_actions
 from thants.common.generators.food import BasicFoodGenerator, FoodGenerator
 from thants.common.generators.terrain import (
     OpenTerrainGenerator,
     TerrainGenerator,
 )
+from thants.common.signals import BasicSignalPropagator, SignalPropagator
 from thants.common.steps import deposit_signals, update_food
-
-from .actions import derive_actions
-from .generators.ants import AntGenerator, BasicAntGenerator
-from .observations import observations_from_state
-from .rewards import NullRewardFn, RewardFn
-from .signals import BasicSignalPropagator, SignalPropagator
-from .steps import update_positions
-from .types import Ants, Observations, State
-from .viewer import ThantsViewer
+from thants.common.types import Ants, Observations
 
 
 class Thants(Environment):

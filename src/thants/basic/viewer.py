@@ -8,7 +8,7 @@ from jumanji.viewer import MatplotlibViewer
 from matplotlib.image import AxesImage
 from numpy.typing import NDArray
 
-from .types import State
+from thants.basic.types import State
 
 
 def draw_env(dims: tuple[int, int], state: State) -> tuple[chex.Array, chex.Array]:

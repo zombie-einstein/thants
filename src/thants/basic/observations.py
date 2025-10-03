@@ -2,7 +2,8 @@ import chex
 import jax
 import jax.numpy as jnp
 
-from .types import Observations, State
+from thants.basic.types import State
+from thants.common.types import Observations
 
 
 def observations_from_state(state: State) -> Observations:

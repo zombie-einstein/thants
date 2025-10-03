@@ -8,8 +8,8 @@ from jumanji.testing.env_not_smoke import (
 
 from thants.basic import Thants
 from thants.basic.generators.ants import BasicAntGenerator
-from thants.basic.types import Observations
 from thants.common.generators.food import BasicFoodGenerator
+from thants.common.types import Observations
 
 
 @pytest.fixture

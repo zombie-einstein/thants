@@ -1,7 +1,7 @@
 import chex
 import jax.numpy as jnp
 
-from .types import Actions, SignalActions
+from thants.common.types import Actions, SignalActions
 
 
 def derive_actions(actions: chex.Array) -> Actions:

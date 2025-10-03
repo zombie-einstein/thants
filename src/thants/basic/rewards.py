@@ -3,7 +3,7 @@ import abc
 import chex
 import jax.numpy as jnp
 
-from .types import State
+from thants.basic.types import State
 
 
 class RewardFn(abc.ABC):
