@@ -66,3 +66,21 @@ def test_fuzz_movement(key: chex.PRNGKey) -> None:
     occupation = jax.vmap(bin_count)(idxs)
 
     assert jnp.max(occupation) == 1
+
+
+def test_terrain_blocking() -> None:
+    dims = (3, 3)
+    terrain = jnp.ones(dims, dtype=bool)
+    terrain = terrain.at[1, 1].set(False)
+    pos = jnp.array([[0, 1]])
+
+    # Should be blocked by terrain
+    updates = jnp.array([[1, 0]])
+    new_pos = update_positions(dims, pos, terrain, updates)
+    assert jnp.array_equal(pos, new_pos)
+
+    # Should not be blocked by terrain
+    updates = jnp.array([[0, 1]])
+    new_pos = update_positions(dims, pos, terrain, updates)
+    expected_pos = jnp.array([[0, 2]])
+    assert jnp.array_equal(expected_pos, new_pos)

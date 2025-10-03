@@ -11,11 +11,12 @@ from matplotlib.animation import FuncAnimation
 
 from . import steps
 from .actions import derive_actions
-from .generator import BasicGenerator, Generator
+from .generators.ants import AntGenerator, BasicAntGenerator
+from .generators.food import BasicFoodGenerator, FoodGenerator
+from .generators.terrain import OpenTerrainGenerator, TerrainGenerator
 from .observations import observations_from_state
 from .rewards import NullRewardFn, RewardFn
 from .signals import BasicSignalPropagator, SignalPropagator
-from .terrain import OpenTerrainGenerator, TerrainGenerator
 from .types import Ants, Observations, State
 from .viewer import ThantsViewer
 
@@ -28,8 +29,9 @@ class Thants(Environment):
     def __init__(
         self,
         dims: tuple[int, int],
+        ant_generator: Optional[AntGenerator] = None,
+        food_generator: Optional[FoodGenerator] = None,
         terrain_generator: Optional[TerrainGenerator] = None,
-        generator: Optional[Generator] = None,
         signal_dynamics: Optional[SignalPropagator] = None,
         reward_fn: Optional[RewardFn] = None,
         viewer: Optional[Viewer[State]] = None,
@@ -41,11 +43,18 @@ class Thants(Environment):
 
         Parameters
         ----------
-        generator
-            Initial state generator, initialises ants, food and nest values.
-            By default, implements a `BasicGenerator` for a 100x100 space
-            and 25 agents. The generator is also responsible for depositing
-            new food during the simulation.
+        dims
+            Environment grid dimensions
+        ant_generator
+            Initial ant state generator, initialises ants and nest values.
+            By default, initialises a `BasicAntGenerator` for a 100x100 space
+            and 25 agents.
+        food_generator
+            Initial food state generator. By default, initialises a `BasicFoodGenerator`
+            that creates 5x5 rectangular patches of food at fixed intervals.
+        terrain_generator
+            Terrain generator. By default, initialises a `OpenTerrainGenerator`
+            that initialises a map with no obstacles.
         signal_dynamics
             Signal propagation functionality
             By default, implements a `BasicSignalPropagator` with 2 signal values.
@@ -63,11 +72,12 @@ class Thants(Environment):
         self.dims = dims
         self.carry_capacity = carry_capacity
         self.max_steps = max_steps
+        self._ant_generator = ant_generator or BasicAntGenerator(25, (5, 5))
+        self._food_generator = food_generator or BasicFoodGenerator((5, 5), 100, 1.0)
         self._terrain_generator = terrain_generator or OpenTerrainGenerator()
         self._signal_dynamics = signal_dynamics or BasicSignalPropagator(
             n_signals=2, decay_rate=0.002, dissipation_rate=0.2
         )
-        self._generator = generator or BasicGenerator(dims, 25, (5, 5), (5, 5), 100)
         self._reward_fn = reward_fn or NullRewardFn()
         self._viewer = viewer or ThantsViewer()
         super().__init__()
@@ -86,11 +96,10 @@ class Thants(Environment):
         tuple[State, TimeStep]
             Tuple containing new environment state, and initial timestep
         """
-        key, init_key, terrain_key = jax.random.split(key, num=3)
-        ants, nest, food = self._generator.init(init_key)
-        signals = jnp.zeros(
-            (self._signal_dynamics.n_signals, *self._generator.dims), dtype=float
-        )
+        key, ant_key, food_key, terrain_key = jax.random.split(key, num=4)
+        ants, nest = self._ant_generator(self.dims, ant_key)
+        food = self._food_generator.init(self.dims, food_key)
+        signals = jnp.zeros((self._signal_dynamics.n_signals, *self.dims), dtype=float)
         terrain = self._terrain_generator(self.dims, terrain_key)
         state = State(
             step=0,
@@ -102,7 +111,9 @@ class Thants(Environment):
             terrain=terrain,
         )
         observations = observations_from_state(state)
-        time_step = restart(observation=observations, shape=(self._generator.n_agents,))
+        time_step = restart(
+            observation=observations, shape=(self._ant_generator.n_agents,)
+        )
         return state, time_step
 
     def step(
@@ -138,7 +149,7 @@ class Thants(Environment):
 
         # Apply movements
         new_pos = steps.update_positions(
-            self._generator.dims, state.ants.pos, state.terrain, actions.movements
+            self.dims, state.ants.pos, state.terrain, actions.movements
         )
 
         # Pick up and drop-off food
@@ -151,7 +162,7 @@ class Thants(Environment):
             self.carry_capacity,
         )
         # Drop any new food
-        new_food = self._generator.update_food(food_key, state.step, new_food)
+        new_food = self._food_generator.update(food_key, state.step, new_food)
         # Propagate / disperse signals
         new_signals = self._signal_dynamics(signals_key, state.signals)
         # Deposit signals
@@ -181,7 +192,7 @@ class Thants(Environment):
 
     @cached_property
     def num_agents(self) -> int:
-        return self._generator.n_agents
+        return self._ant_generator.n_agents
 
     @cached_property
     def observation_spec(self) -> specs.Spec[Observations]:
@@ -267,7 +278,7 @@ class Thants(Environment):
         ActionSpec
         """
         return specs.BoundedArray(
-            shape=(self._generator.n_agents,),
+            shape=(self._ant_generator.n_agents,),
             minimum=0,
             maximum=7 + self._signal_dynamics.n_signals,
             dtype=int,
@@ -285,7 +296,7 @@ class Thants(Environment):
         RewardSpec
         """
         return specs.Array(
-            shape=(self._generator.n_agents,),
+            shape=(self._ant_generator.n_agents,),
             dtype=float,
         )
 

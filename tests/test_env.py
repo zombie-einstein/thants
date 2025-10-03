@@ -7,21 +7,23 @@ from jumanji.testing.env_not_smoke import (
 )
 
 from thants import Thants
-from thants.generator import BasicGenerator
+from thants.generators.ants import BasicAntGenerator
+from thants.generators.food import BasicFoodGenerator
 from thants.types import Observations
 
 
 @pytest.fixture
 def env() -> Thants:
     dims = (50, 50)
-    generator = BasicGenerator(
-        dims,
+    ant_generator = BasicAntGenerator(
         100,
         (5, 5),
+    )
+    food_generator = BasicFoodGenerator(
         (2, 2),
         50,
     )
-    return Thants(dims=dims, generator=generator)
+    return Thants(dims=dims, ant_generator=ant_generator, food_generator=food_generator)
 
 
 def test_env_does_not_smoke(env: Thants) -> None:
