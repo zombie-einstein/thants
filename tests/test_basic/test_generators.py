@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 
-from thants.generators.ants import BasicAntGenerator
-from thants.generators.food import BasicFoodGenerator
+from thants.basic.generators.ants import BasicAntGenerator
+from thants.common.generators.food import BasicFoodGenerator
 
 
 def test_basic_ant_generator(key) -> None:

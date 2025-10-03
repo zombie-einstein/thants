@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 
-from thants.steps import deposit_signals
-from thants.types import SignalActions
+from thants.common.steps import deposit_signals
+from thants.common.types import SignalActions
 
 
 def test_deposit_signals() -> None:

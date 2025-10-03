@@ -9,14 +9,19 @@ from jumanji.types import TimeStep, restart, termination, transition
 from jumanji.viewer import Viewer
 from matplotlib.animation import FuncAnimation
 
-from . import steps
+from thants.common.generators.food import BasicFoodGenerator, FoodGenerator
+from thants.common.generators.terrain import (
+    OpenTerrainGenerator,
+    TerrainGenerator,
+)
+from thants.common.steps import deposit_signals, update_food
+
 from .actions import derive_actions
 from .generators.ants import AntGenerator, BasicAntGenerator
-from .generators.food import BasicFoodGenerator, FoodGenerator
-from .generators.terrain import OpenTerrainGenerator, TerrainGenerator
 from .observations import observations_from_state
 from .rewards import NullRewardFn, RewardFn
 from .signals import BasicSignalPropagator, SignalPropagator
+from .steps import update_positions
 from .types import Ants, Observations, State
 from .viewer import ThantsViewer
 
@@ -148,12 +153,12 @@ class Thants(Environment):
         actions = derive_actions(actions)
 
         # Apply movements
-        new_pos = steps.update_positions(
+        new_pos = update_positions(
             self.dims, state.ants.pos, state.terrain, actions.movements
         )
 
         # Pick up and drop-off food
-        new_food, new_carrying = steps.update_food(
+        new_food, new_carrying = update_food(
             state.food,
             new_pos,
             actions.take_food,
@@ -166,9 +171,7 @@ class Thants(Environment):
         # Propagate / disperse signals
         new_signals = self._signal_dynamics(signals_key, state.signals)
         # Deposit signals
-        new_signals = steps.deposit_signals(
-            new_signals, new_pos, actions.deposit_signals
-        )
+        new_signals = deposit_signals(new_signals, new_pos, actions.deposit_signals)
 
         new_state = State(
             step=state.step + 1,

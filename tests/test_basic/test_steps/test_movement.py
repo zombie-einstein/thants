@@ -3,7 +3,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-from thants.steps import update_positions
+from thants.basic.steps import update_positions
 
 
 @pytest.mark.parametrize(

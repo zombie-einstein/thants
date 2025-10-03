@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 
-from thants.actions import derive_actions
-from thants.types import Actions, SignalActions
+from thants.basic.actions import derive_actions
+from thants.basic.types import Actions, SignalActions
 
 
 def test_derive_actions() -> None:

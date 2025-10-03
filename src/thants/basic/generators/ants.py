@@ -4,8 +4,8 @@ import math
 import chex
 import jax.numpy as jnp
 
-from thants.types import Ants
-from thants.utils import get_rectangular_indices
+from thants.basic.types import Ants
+from thants.common.utils import get_rectangular_indices
 
 
 class AntGenerator(abc.ABC):

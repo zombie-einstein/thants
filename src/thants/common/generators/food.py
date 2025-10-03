@@ -4,7 +4,7 @@ import chex
 import jax
 import jax.numpy as jnp
 
-from thants.utils import get_rectangular_indices
+from thants.common.utils import get_rectangular_indices
 
 
 class FoodGenerator(abc.ABC):

@@ -6,10 +6,10 @@ from jumanji.testing.env_not_smoke import (
     check_env_specs_does_not_smoke,
 )
 
-from thants import Thants
-from thants.generators.ants import BasicAntGenerator
-from thants.generators.food import BasicFoodGenerator
-from thants.types import Observations
+from thants.basic import Thants
+from thants.basic.generators.ants import BasicAntGenerator
+from thants.basic.types import Observations
+from thants.common.generators.food import BasicFoodGenerator
 
 
 @pytest.fixture

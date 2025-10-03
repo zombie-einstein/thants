@@ -2,7 +2,7 @@ import chex
 import jax
 import jax.numpy as jnp
 
-from thants.signals import BasicSignalPropagator
+from thants.basic.signals import BasicSignalPropagator
 
 
 def test_total_signals_preserved(key) -> None:

@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 import pytest
 
-from thants.steps import update_food
+from thants.basic.steps import update_food
 
 
 @pytest.mark.parametrize(

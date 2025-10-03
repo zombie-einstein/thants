@@ -1,6 +1,6 @@
 import jax.numpy as jnp
 
-from thants.utils import get_rectangular_indices
+from thants.common.utils import get_rectangular_indices
 
 
 def test_rectangular_indices() -> None:
