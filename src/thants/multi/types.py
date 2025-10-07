@@ -17,13 +17,13 @@ class State:
 
     step: Environment step
     key: JAX random key
-    colony: Ant colony state
+    colonies: List ant colonies
     food: Environment food deposit state
     terrain: Flag indicating if a cell is passable by ants
     """
 
     step: int
     key: chex.PRNGKey
-    colony: Colony
+    colonies: list[Colony]
     food: chex.Array  # [*env-size]
     terrain: chex.Array  # [*env-size]

@@ -13,10 +13,10 @@ from thants.basic.types import State
 
 def draw_env(dims: tuple[int, int], state: State) -> tuple[chex.Array, chex.Array]:
     frame = jnp.zeros(dims)
-    ants = frame.at[state.colony.ants.pos[:, 0], state.colony.ants.pos[:, 1]].set(1.0)
-    env = jnp.stack([ants, state.food, state.colony.nest], axis=2)
+    ants = frame.at[state.ants.pos[:, 0], state.ants.pos[:, 1]].set(1.0)
+    env = jnp.stack([ants, state.food, state.nest], axis=2)
     signals = jnp.stack(
-        [state.colony.signals[0], state.colony.signals[1], frame, frame + 0.5], axis=2
+        [state.signals[0], state.signals[1], frame, frame + 0.5], axis=2
     )
     return env, signals
 

@@ -3,7 +3,7 @@ import jax.numpy as jnp
 
 from thants.basic.observations import observations_from_state
 from thants.basic.types import State
-from thants.common.types import Ants, Observations
+from thants.common.types import Ants, Colony, Observations
 
 
 def test_observations_from_state(key: chex.PRNGKey) -> None:
@@ -21,14 +21,16 @@ def test_observations_from_state(key: chex.PRNGKey) -> None:
     state = State(
         step=0,
         key=key,
-        ants=Ants(
-            pos=ant_pos,
-            health=ant_health,
-            carrying=ant_carry,
+        colony=Colony(
+            ants=Ants(
+                pos=ant_pos,
+                health=ant_health,
+                carrying=ant_carry,
+            ),
+            signals=signals,
+            nest=nest,
         ),
         food=food,
-        signals=signals,
-        nest=nest,
         terrain=terrain,
     )
 

@@ -51,4 +51,4 @@ class NullRewardFn(RewardFn):
         chex.Array
             Array of individual agent rewards
         """
-        return jnp.zeros_like(old_state.ants.health)
+        return jnp.zeros_like(old_state.colony.ants.health)

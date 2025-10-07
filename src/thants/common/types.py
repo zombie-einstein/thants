@@ -24,6 +24,13 @@ class Ants:
 
 
 @dataclass
+class Colony:
+    ants: Ants
+    signals: chex.Array  # [n-channels, *env-size]
+    nest: chex.Array  # [*env-size]
+
+
+@dataclass
 class SignalActions:
     """
     Agent deposit signal actions

@@ -1,5 +1,9 @@
+import math
+
 import chex
 import jax.numpy as jnp
+
+from thants.common.types import Ants, Colony
 
 
 def get_rectangular_indices(rec_dims: tuple[int, int]) -> chex.Array:
@@ -19,3 +23,36 @@ def get_rectangular_indices(rec_dims: tuple[int, int]) -> chex.Array:
     n_idxs = rec_dims[0] * rec_dims[1]
     idxs = jnp.indices(rec_dims).reshape(2, n_idxs).T
     return idxs
+
+
+def init_colony(
+    dims: tuple[int, int],
+    x0: tuple[int, int],
+    x1: tuple[int, int],
+    nest_dims: tuple[int, int],
+    n_agents: int,
+    n_signals: int,
+) -> Colony:
+    x0 = jnp.array(x0)
+    x1 = jnp.array(x1)
+    dims = jnp.array(dims)
+    centre = (x0 + ((x1 - x0) // 2))[jnp.newaxis]
+    d = math.ceil(math.sqrt(n_agents))
+    ant_pos = get_rectangular_indices((d, d))[:n_agents]
+    ant_pos = ant_pos + centre - (jnp.array([[d, d]]) // 2)
+    ant_pos = ant_pos % dims
+
+    ant_health = jnp.ones((n_agents,))
+    ant_carrying = jnp.zeros((n_agents,))
+
+    ants = Ants(pos=ant_pos, health=ant_health, carrying=ant_carrying)
+
+    nest_idxs = get_rectangular_indices(nest_dims)
+    nest_idxs = nest_idxs + centre - jnp.array(nest_dims) // 2
+    nest_idxs = nest_idxs % dims
+    nest = jnp.zeros(dims, dtype=bool)
+    nest = nest.at[nest_idxs[:, 0], nest_idxs[:, 1]].set(True)
+
+    signals = jnp.zeros((n_signals, *dims))
+
+    return Colony(ants=ants, signals=signals, nest=nest)

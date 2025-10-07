@@ -9,12 +9,6 @@ from jumanji.types import TimeStep, restart, termination, transition
 from jumanji.viewer import Viewer
 from matplotlib.animation import FuncAnimation
 
-from thants.basic.colony_generator import BasicColonyGenerator, ColonyGenerator
-from thants.basic.observations import observations_from_state
-from thants.basic.rewards import NullRewardFn, RewardFn
-from thants.basic.steps import update_positions
-from thants.basic.types import State
-from thants.basic.viewer import ThantsViewer
 from thants.common.actions import derive_actions
 from thants.common.generators.food import BasicFoodGenerator, FoodGenerator
 from thants.common.generators.terrain import (
@@ -22,19 +16,29 @@ from thants.common.generators.terrain import (
     TerrainGenerator,
 )
 from thants.common.signals import BasicSignalPropagator, SignalPropagator
-from thants.common.steps import deposit_signals, update_food
+from thants.common.steps import deposit_signals
 from thants.common.types import Ants, Colony, Observations
+from thants.multi.colonies_generator import (
+    BasicColoniesGenerator,
+    ColoniesGenerator,
+)
+from thants.multi.observations import observations_from_state
+from thants.multi.steps import update_food, update_positions
+from thants.multi.types import State
+from thants.multi.viewer import ThantsViewer
+
+from .rewards import NullRewardFn, RewardFn
 
 
-class Thants(Environment):
+class ThantsMultiColony(Environment):
     """
-    Thants environment
+    Thants environment with dueling colonies
     """
 
     def __init__(
         self,
-        dims: tuple[int, int],
-        colony_generator: Optional[ColonyGenerator] = None,
+        dims: tuple[int, int] = (50, 100),
+        colony_generator: Optional[ColoniesGenerator] = None,
         food_generator: Optional[FoodGenerator] = None,
         terrain_generator: Optional[TerrainGenerator] = None,
         signal_dynamics: Optional[SignalPropagator] = None,
@@ -77,7 +81,9 @@ class Thants(Environment):
         self.dims = dims
         self.carry_capacity = carry_capacity
         self.max_steps = max_steps
-        self._colony_generator = colony_generator or BasicColonyGenerator(25, 2, (5, 5))
+        self._colony_generator = colony_generator or BasicColoniesGenerator(
+            2, 25, (5, 5)
+        )
         self._food_generator = food_generator or BasicFoodGenerator((5, 5), 100, 1.0)
         self._terrain_generator = terrain_generator or OpenTerrainGenerator()
         self._signal_dynamics = signal_dynamics or BasicSignalPropagator(
@@ -87,7 +93,7 @@ class Thants(Environment):
         self._viewer = viewer or ThantsViewer()
         super().__init__()
 
-    def reset(self, key: chex.PRNGKey) -> Tuple[State, TimeStep[Observations]]:
+    def reset(self, key: chex.PRNGKey) -> Tuple[State, list[TimeStep[Observations]]]:
         """
         Reset the environment state
 
@@ -102,25 +108,26 @@ class Thants(Environment):
             Tuple containing new environment state, and initial timestep
         """
         key, colony_key, food_key, terrain_key = jax.random.split(key, num=4)
-        colony = self._colony_generator(self.dims, colony_key)
+        colonies = self._colony_generator(self.dims, colony_key)
         food = self._food_generator.init(self.dims, food_key)
         terrain = self._terrain_generator(self.dims, terrain_key)
         state = State(
             step=0,
             key=key,
-            colony=colony,
+            colonies=colonies,
             food=food,
             terrain=terrain,
         )
         observations = observations_from_state(state)
-        time_step = restart(
-            observation=observations, shape=(self._colony_generator.n_agents,)
-        )
-        return state, time_step
+        time_steps = [
+            restart(observation=obs, shape=(n,))
+            for obs, n in zip(observations, self._colony_generator.n_agents)
+        ]
+        return state, time_steps
 
     def step(
-        self, state: State, actions: chex.Array
-    ) -> Tuple[State, TimeStep[Observations]]:
+        self, state: State, actions: list[chex.Array]
+    ) -> Tuple[State, list[TimeStep[Observations]]]:
         """
         Update the state of the environment
 
@@ -145,54 +152,72 @@ class Thants(Environment):
             Tuple containing new state and TimeStep
         """
         key, food_key, signals_key = jax.random.split(state.key, num=3)
-
         # Unwrap actions
-        actions = derive_actions(actions)
+        actions = [derive_actions(a) for a in actions]
 
         # Apply movements
         new_pos = update_positions(
-            self.dims, state.colony.ants.pos, state.terrain, actions.movements
+            self.dims,
+            [c.ants.pos for c in state.colonies],
+            state.terrain,
+            [a.movements for a in actions],
         )
-
-        # Pick up and drop-off food
+        # Pick up and drop-off food for each colony
         new_food, new_carrying = update_food(
             state.food,
             new_pos,
-            actions.take_food,
-            actions.deposit_food,
-            state.colony.ants.carrying,
+            [a.take_food for a in actions],
+            [a.deposit_food for a in actions],
+            [c.ants.carrying for c in state.colonies],
             self.carry_capacity,
         )
         # Drop any new food
         new_food = self._food_generator.update(food_key, state.step, new_food)
         # Propagate / disperse signals
-        new_signals = self._signal_dynamics(signals_key, state.colony.signals)
+        new_signals = [
+            self._signal_dynamics(signals_key, c.signals) for c in state.colonies
+        ]
         # Deposit signals
-        new_signals = deposit_signals(new_signals, new_pos, actions.deposit_signals)
+        new_signals = [
+            deposit_signals(signals, pos, a.deposit_signals)
+            for signals, pos, a in zip(new_signals, new_pos, actions)
+        ]
 
-        ants = Ants(pos=new_pos, health=state.colony.ants.health, carrying=new_carrying)
-        colony = Colony(ants=ants, signals=new_signals, nest=state.colony.nest)
+        colonies = [
+            Colony(
+                ants=Ants(pos=pos, health=c.ants.health, carrying=carrying),
+                signals=signals,
+                nest=c.nest,
+            )
+            for c, pos, signals, carrying in zip(
+                state.colonies, new_pos, new_signals, new_carrying
+            )
+        ]
 
         new_state = State(
             step=state.step + 1,
             key=key,
-            colony=colony,
+            colonies=colonies,
             food=new_food,
             terrain=state.terrain,
         )
         observations = observations_from_state(new_state)
         rewards = self._reward_fn(old_state=state, new_state=new_state)
-        timestep = jax.lax.cond(
-            state.step >= self.max_steps,
-            partial(termination, shape=(self.num_agents,)),
-            partial(transition, shape=(self.num_agents,)),
-            rewards,
-            observations,
-        )
+
+        timestep = [
+            jax.lax.cond(
+                state.step >= self.max_steps,
+                partial(termination, shape=(n,)),
+                partial(transition, shape=(n,)),
+                rew,
+                obs,
+            )
+            for rew, obs, n in zip(rewards, observations, self.num_agents)
+        ]
         return new_state, timestep
 
     @cached_property
-    def num_agents(self) -> int:
+    def num_agents(self) -> list[int]:
         return self._colony_generator.n_agents
 
     @cached_property
@@ -213,42 +238,42 @@ class Thants(Environment):
         ObservationSpec
         """
         ants = specs.BoundedArray(
-            shape=(self.num_agents, 9),
+            shape=(self.num_agents[0], 9),
             minimum=0.0,
             maximum=1.0,
             dtype=float,
             name="ants",
         )
         food = specs.BoundedArray(
-            shape=(self.num_agents, 9),
+            shape=(self.num_agents[0], 9),
             minimum=0.0,
             maximum=jnp.inf,
             dtype=float,
             name="food",
         )
         signals = specs.BoundedArray(
-            shape=(self.num_agents, self._colony_generator.n_signals, 9),
+            shape=(self.num_agents[0], self._colony_generator.n_signals, 9),
             minimum=0.0,
             maximum=jnp.inf,
             dtype=float,
             name="signals",
         )
         nest = specs.BoundedArray(
-            shape=(self.num_agents, 9),
+            shape=(self.num_agents[0], 9),
             minimum=0.0,
             maximum=1.0,
             dtype=float,
             name="nest",
         )
         terrain = specs.BoundedArray(
-            shape=(self.num_agents, 9),
+            shape=(self.num_agents[0], 9),
             minimum=0.0,
             maximum=1.0,
             dtype=float,
             name="terrain",
         )
         carrying = specs.BoundedArray(
-            shape=(self.num_agents,),
+            shape=(self.num_agents[0],),
             minimum=0.0,
             maximum=self.carry_capacity,
             dtype=float,
@@ -279,7 +304,7 @@ class Thants(Environment):
         ActionSpec
         """
         return specs.BoundedArray(
-            shape=(self._colony_generator.n_agents,),
+            shape=(self._colony_generator.n_agents[0],),
             minimum=0,
             maximum=7 + self._colony_generator.n_signals,
             dtype=int,
@@ -297,7 +322,7 @@ class Thants(Environment):
         RewardSpec
         """
         return specs.Array(
-            shape=(self._colony_generator.n_agents,),
+            shape=(self._colony_generator.n_agents[0],),
             dtype=float,
         )
 

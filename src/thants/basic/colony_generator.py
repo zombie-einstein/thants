@@ -1,19 +1,17 @@
 import abc
-import math
 
 import chex
-import jax.numpy as jnp
 
-from thants.basic.types import Ants
-from thants.common.utils import get_rectangular_indices
+from thants.common.types import Colony
+from thants.common.utils import init_colony
 
 
-class AntGenerator(abc.ABC):
+class ColonyGenerator(abc.ABC):
     """
     Base initial state generator and food updater
     """
 
-    def __init__(self, n_agents: int) -> None:
+    def __init__(self, n_agents: int, n_signals: int) -> None:
         """
         Initialise base attributes
 
@@ -23,11 +21,10 @@ class AntGenerator(abc.ABC):
             Number of ant agents to initialise
         """
         self.n_agents = n_agents
+        self.n_signals = n_signals
 
     @abc.abstractmethod
-    def __call__(
-        self, dims: tuple[int, int], key: chex.PRNGKey
-    ) -> tuple[Ants, chex.Array]:
+    def __call__(self, dims: tuple[int, int], key: chex.PRNGKey) -> Colony:
         """
         Initialise ants, and nest
 
@@ -45,7 +42,7 @@ class AntGenerator(abc.ABC):
         """
 
 
-class BasicAntGenerator(AntGenerator):
+class BasicColonyGenerator(ColonyGenerator):
     """
     Basic generator that creates rectangular nest and food blocks
 
@@ -61,6 +58,7 @@ class BasicAntGenerator(AntGenerator):
     def __init__(
         self,
         n_agents: int,
+        n_signals: int,
         nest_dims: tuple[int, int],
     ) -> None:
         """
@@ -74,11 +72,9 @@ class BasicAntGenerator(AntGenerator):
             Dimensions of the nest region
         """
         self.nest_dims = nest_dims
-        super().__init__(n_agents)
+        super().__init__(n_agents, n_signals)
 
-    def __call__(
-        self, dims: tuple[int, int], key: chex.PRNGKey
-    ) -> tuple[Ants, chex.Array]:
+    def __call__(self, dims: tuple[int, int], key: chex.PRNGKey) -> Colony:
         """
         Initialise ant and nest states
 
@@ -99,24 +95,6 @@ class BasicAntGenerator(AntGenerator):
         tuple[Ants, chex.Array]
             Tuple containing ant and nest states
         """
-        assert self.n_agents <= dims[0] * dims[1]
-
-        dims = jnp.array(dims)
-        centre = (dims // 2)[jnp.newaxis]
-
-        d = math.ceil(math.sqrt(self.n_agents))
-        ant_pos = get_rectangular_indices((d, d))[: self.n_agents]
-        ant_pos = ant_pos + centre - jnp.array([[d, d]]) // 2
-        ant_pos = ant_pos % dims
-
-        ant_health = jnp.ones((self.n_agents,))
-        ant_carrying = jnp.zeros((self.n_agents,))
-        ants = Ants(pos=ant_pos, health=ant_health, carrying=ant_carrying)
-
-        nest_idxs = get_rectangular_indices(self.nest_dims)
-        nest_idxs = nest_idxs + centre - jnp.array(self.nest_dims) // 2
-        nest_idxs = nest_idxs % dims
-        nest = jnp.zeros(dims, dtype=bool)
-        nest = nest.at[nest_idxs[:, 0], nest_idxs[:, 1]].set(True)
-
-        return ants, nest
+        return init_colony(
+            dims, (0, 0), dims, self.nest_dims, self.n_agents, self.n_signals
+        )

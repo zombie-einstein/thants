@@ -9,17 +9,6 @@ class SignalPropagator(abc.ABC):
     Signal dynamics base-class
     """
 
-    def __init__(self, n_signal: int) -> None:
-        """
-        Initialise base signal propagator
-
-        Parameters
-        ----------
-        n_signal
-            Number of distinct signal channels
-        """
-        self.n_signals = n_signal
-
     @abc.abstractmethod
     def __call__(self, key: chex.PRNGKey, signals: chex.Array) -> chex.Array:
         """
@@ -49,14 +38,12 @@ class BasicSignalPropagator(SignalPropagator):
     - Propagate signals by sharing a fraction of all deposits to neighbouring cells
     """
 
-    def __init__(self, n_signals: int, decay_rate: float, dissipation_rate) -> None:
+    def __init__(self, decay_rate: float, dissipation_rate) -> None:
         """
         Initialise a basic propagator
 
         Parameters
         ----------
-        n_signals
-            Number of signal channels
         decay_rate
             Amount removed from deposits each step
         dissipation_rate
@@ -64,7 +51,7 @@ class BasicSignalPropagator(SignalPropagator):
         """
         self.decay_rate = decay_rate
         self.dissipation_rate = dissipation_rate
-        super().__init__(n_signals)
+        super().__init__()
 
     def __call__(self, key: chex.PRNGKey, signals: chex.Array) -> chex.Array:
         signals = jnp.maximum(signals - self.decay_rate, 0.0)
