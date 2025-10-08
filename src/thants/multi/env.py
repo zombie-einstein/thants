@@ -25,7 +25,7 @@ from thants.multi.colonies_generator import (
 from thants.multi.observations import observations_from_state
 from thants.multi.steps import update_food, update_positions
 from thants.multi.types import State
-from thants.multi.viewer import ThantsViewer
+from thants.multi.viewer import ThantsMultiColonyViewer
 
 from .rewards import NullRewardFn, RewardFn
 
@@ -82,7 +82,7 @@ class ThantsMultiColony(Environment):
         self.carry_capacity = carry_capacity
         self.max_steps = max_steps
         self._colony_generator = colony_generator or BasicColoniesGenerator(
-            2, 25, (5, 5)
+            25, 2, (5, 5)
         )
         self._food_generator = food_generator or BasicFoodGenerator((5, 5), 100, 1.0)
         self._terrain_generator = terrain_generator or OpenTerrainGenerator()
@@ -90,7 +90,7 @@ class ThantsMultiColony(Environment):
             decay_rate=0.002, dissipation_rate=0.2
         )
         self._reward_fn = reward_fn or NullRewardFn()
-        self._viewer = viewer or ThantsViewer()
+        self._viewer = viewer or ThantsMultiColonyViewer()
         super().__init__()
 
     def reset(self, key: chex.PRNGKey) -> Tuple[State, list[TimeStep[Observations]]]:
