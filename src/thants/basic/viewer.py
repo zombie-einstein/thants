@@ -1,6 +1,8 @@
+from functools import partial
 from typing import Optional, Sequence, Tuple
 
 import chex
+import jax
 import jax.numpy as jnp
 import matplotlib.animation
 import matplotlib.pyplot as plt
@@ -9,16 +11,26 @@ from matplotlib.image import AxesImage
 from numpy.typing import NDArray
 
 from thants.basic.types import State
+from thants.common.utils import format_plot
 
 
-def draw_env(dims: tuple[int, int], state: State) -> tuple[chex.Array, chex.Array]:
-    frame = jnp.zeros(dims)
-    ants = frame.at[state.colony.ants.pos[:, 0], state.colony.ants.pos[:, 1]].set(1.0)
-    env = jnp.stack([ants, state.food, state.colony.nest], axis=2)
-    signals = jnp.stack(
-        [state.colony.signals[0], state.colony.signals[1], frame, frame + 0.5], axis=2
+def draw_env(state: State) -> tuple[chex.Array, chex.Array]:
+    terrain = state.terrain.astype(float)
+    terrain = jnp.stack([terrain, terrain, terrain, jnp.ones_like(terrain)], axis=2)
+    trans_colors = jnp.array([1.0, 0.0, 0.0, 0.5])
+    nest = state.colony.nest[:, :, jnp.newaxis] * trans_colors[jnp.newaxis]
+    return terrain, nest
+
+
+@partial(jax.jit, static_argnames="dims")
+def draw_ants(dims: tuple[int, int], state: State) -> tuple[chex.Array, chex.Array]:
+    ants = jnp.zeros((*dims, 4))
+    color = jnp.array([1.0, 0.0, 0.0, 1.0])
+    ants = ants.at[state.colony.ants.pos[:, 0], state.colony.ants.pos[:, 1]].set(color)
+    food = jnp.stack(
+        [jnp.zeros(dims), jnp.ones(dims), jnp.zeros(dims), state.food], axis=2
     )
-    return env, signals
+    return ants, food
 
 
 class ThantsViewer(MatplotlibViewer[State]):
@@ -39,6 +51,11 @@ class ThantsViewer(MatplotlibViewer[State]):
         """
         super().__init__(name, render_mode)
 
+    def _set_figure_size(self, dims: tuple[int, int]) -> None:
+        longest = max(dims[0], dims[1])
+        f_dims = (10.0 * dims[1] / longest, 10.0 * dims[0] / longest)
+        self.figure_size = f_dims
+
     def render(
         self, state: State, save_path: Optional[str] = None
     ) -> Optional[NDArray]:
@@ -57,7 +74,10 @@ class ThantsViewer(MatplotlibViewer[State]):
             RGB array if the render_mode is ``rgb_array``
         """
         self._clear_display()
-        fig, ax = self._get_fig_ax()
+        dims = state.food.shape
+        self._set_figure_size(dims)
+        fig, ax = self._get_fig_ax(padding=0.01)
+        fig, ax = format_plot(fig, ax, dims)
         self._draw(ax, state)
 
         if save_path:
@@ -88,19 +108,25 @@ class ThantsViewer(MatplotlibViewer[State]):
         if not states:
             raise ValueError(f"The states argument has to be non-empty, got {states}.")
 
-        fig, ax = self._get_fig_ax(name_suffix="_animation", show=False)
-        plt.close(fig=fig)
         env_dims = states[0].terrain.shape
+        self._set_figure_size(env_dims)
+        fig, ax = self._get_fig_ax(name_suffix="_animation", show=False, padding=0.01)
+        fig, ax = format_plot(fig, ax, env_dims)
+        plt.close(fig=fig)
 
-        env, signals = draw_env(env_dims, states[0])
-        env_img = ax.imshow(env)
-        signal_img = ax.imshow(signals)
+        terrain, nest = draw_env(states[0])
+        ax.imshow(terrain)
+        ax.imshow(nest)
+
+        ants, food = draw_ants(env_dims, states[0])
+        food_img = ax.imshow(food)
+        ants_img = ax.imshow(ants)
 
         def make_frame(state: State) -> tuple[AxesImage, AxesImage]:
-            step_env, step_signals = draw_env(env_dims, state)
-            env_img.set_data(step_env)
-            signal_img.set_data(step_signals)
-            return env_img, signal_img
+            step_ants, step_food = draw_ants(env_dims, state)
+            food_img.set_data(step_food)
+            ants_img.set_data(step_ants)
+            return ants_img, food_img
 
         self._animation = matplotlib.animation.FuncAnimation(
             fig,
@@ -118,9 +144,14 @@ class ThantsViewer(MatplotlibViewer[State]):
     def _draw(self, ax: plt.Axes, state: State) -> None:
         ax.clear()
         env_dims = state.terrain.shape
-        env, signals = draw_env(env_dims, state)
-        ax.imshow(env)
-        ax.imshow(signals)
+
+        terrain, nest = draw_env(state)
+        ax.imshow(terrain)
+        ax.imshow(nest)
+
+        ants, food = draw_ants(env_dims, state)
+        ax.imshow(food)
+        ax.imshow(ants)
 
     def _get_fig_ax(
         self,
