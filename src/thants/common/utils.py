@@ -2,6 +2,8 @@ import math
 
 import chex
 import jax.numpy as jnp
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from thants.common.types import Ants, Colony
 
@@ -56,3 +58,25 @@ def init_colony(
     signals = jnp.zeros((n_signals, *dims))
 
     return Colony(ants=ants, signals=signals, nest=nest)
+
+
+def format_plot(
+    fig: Figure, ax: Axes, env_dims: tuple[float, float]
+) -> tuple[Figure, Axes]:
+    """Format an environment plot, remove ticks and bound to the environment dimensions.
+
+    Args:
+        fig: Matplotlib figure.
+        ax: Matplotlib axes.
+        env_dims: Environment dimensions (i.e. its boundaries).
+
+    Returns:
+        Figure: Formatted figure.
+        Axes: Formatted axes.
+    """
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xlim(-0.5, env_dims[1] - 0.5)
+    ax.set_ylim(-0.5, env_dims[0] - 0.5)
+
+    return fig, ax

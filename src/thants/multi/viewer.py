@@ -12,6 +12,7 @@ from matplotlib import colormaps
 from matplotlib.image import AxesImage
 from numpy.typing import NDArray
 
+from thants.common.utils import format_plot
 from thants.multi.types import State
 
 
@@ -71,6 +72,11 @@ class ThantsMultiColonyViewer(MatplotlibViewer[State]):
     def _get_colony_colors(self, n: int) -> chex.Array:
         return jnp.array(self.cmap(np.linspace(0, 1, n)))
 
+    def _set_figure_size(self, dims: tuple[int, int]) -> None:
+        longest = max(dims[0], dims[1])
+        f_dims = (10.0 * dims[1] / longest, 10.0 * dims[0] / longest)
+        self.figure_size = f_dims
+
     def render(
         self, state: State, save_path: Optional[str] = None
     ) -> Optional[NDArray]:
@@ -89,7 +95,10 @@ class ThantsMultiColonyViewer(MatplotlibViewer[State]):
             RGB array if the render_mode is ``rgb_array``
         """
         self._clear_display()
-        fig, ax = self._get_fig_ax()
+        dims = state.food.shape
+        self._set_figure_size(dims)
+        fig, ax = self._get_fig_ax(padding=0.01)
+        fig, ax = format_plot(fig, ax, dims)
         self._draw(ax, state)
 
         if save_path:
@@ -120,10 +129,13 @@ class ThantsMultiColonyViewer(MatplotlibViewer[State]):
         if not states:
             raise ValueError(f"The states argument has to be non-empty, got {states}.")
 
-        fig, ax = self._get_fig_ax(name_suffix="_animation", show=False)
+        dims = states[0].food.shape
+        self._set_figure_size(dims)
+
+        fig, ax = self._get_fig_ax(name_suffix="_animation", show=False, padding=0.01)
+        fig, ax = format_plot(fig, ax, dims)
         plt.close(fig=fig)
 
-        dims = states[0].food.shape
         colors = self._get_colony_colors(len(states[0].colonies))
 
         terrain, nests = draw_env(states[0], colors)

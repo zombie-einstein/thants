@@ -18,7 +18,7 @@ def env() -> ThantsMultiColony:
         50,
     )
     return ThantsMultiColony(
-        dims=dims, colony_generator=colony_generator, food_generator=food_generator
+        dims=dims, colonies_generator=colony_generator, food_generator=food_generator
     )
 
 

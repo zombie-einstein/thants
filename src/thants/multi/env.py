@@ -38,7 +38,7 @@ class ThantsMultiColony(Environment):
     def __init__(
         self,
         dims: tuple[int, int] = (50, 100),
-        colony_generator: Optional[ColoniesGenerator] = None,
+        colonies_generator: Optional[ColoniesGenerator] = None,
         food_generator: Optional[FoodGenerator] = None,
         terrain_generator: Optional[TerrainGenerator] = None,
         signal_dynamics: Optional[SignalPropagator] = None,
@@ -54,7 +54,7 @@ class ThantsMultiColony(Environment):
         ----------
         dims
             Environment grid dimensions
-        ant_generator
+        colonies_generator
             Initial ant state generator, initialises ants and nest values.
             By default, initialises a `BasicAntGenerator` for a 100x100 space
             and 25 agents.
@@ -81,7 +81,7 @@ class ThantsMultiColony(Environment):
         self.dims = dims
         self.carry_capacity = carry_capacity
         self.max_steps = max_steps
-        self._colony_generator = colony_generator or BasicColoniesGenerator(
+        self._colonies_generator = colonies_generator or BasicColoniesGenerator(
             25, 2, (5, 5)
         )
         self._food_generator = food_generator or BasicFoodGenerator((5, 5), 100, 1.0)
@@ -108,7 +108,7 @@ class ThantsMultiColony(Environment):
             Tuple containing new environment state, and initial timestep
         """
         key, colony_key, food_key, terrain_key = jax.random.split(key, num=4)
-        colonies = self._colony_generator(self.dims, colony_key)
+        colonies = self._colonies_generator(self.dims, colony_key)
         food = self._food_generator.init(self.dims, food_key)
         terrain = self._terrain_generator(self.dims, terrain_key)
         state = State(
@@ -121,7 +121,7 @@ class ThantsMultiColony(Environment):
         observations = observations_from_state(state)
         time_steps = [
             restart(observation=obs, shape=(n,))
-            for obs, n in zip(observations, self._colony_generator.n_agents)
+            for obs, n in zip(observations, self._colonies_generator.n_agents)
         ]
         return state, time_steps
 
@@ -218,7 +218,7 @@ class ThantsMultiColony(Environment):
 
     @cached_property
     def num_agents(self) -> list[int]:
-        return self._colony_generator.n_agents
+        return self._colonies_generator.n_agents
 
     @cached_property
     def observation_spec(self) -> specs.Spec[Observations]:
@@ -252,7 +252,7 @@ class ThantsMultiColony(Environment):
             name="food",
         )
         signals = specs.BoundedArray(
-            shape=(self.num_agents[0], self._colony_generator.n_signals, 9),
+            shape=(self.num_agents[0], self._colonies_generator.n_signals, 9),
             minimum=0.0,
             maximum=jnp.inf,
             dtype=float,
@@ -304,9 +304,9 @@ class ThantsMultiColony(Environment):
         ActionSpec
         """
         return specs.BoundedArray(
-            shape=(self._colony_generator.n_agents[0],),
+            shape=(self._colonies_generator.n_agents[0],),
             minimum=0,
-            maximum=7 + self._colony_generator.n_signals,
+            maximum=7 + self._colonies_generator.n_signals,
             dtype=int,
         )
 
@@ -322,7 +322,7 @@ class ThantsMultiColony(Environment):
         RewardSpec
         """
         return specs.Array(
-            shape=(self._colony_generator.n_agents[0],),
+            shape=(self._colonies_generator.n_agents[0],),
             dtype=float,
         )
 
