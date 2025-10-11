@@ -14,7 +14,7 @@ from thants.basic.types import State
 from thants.common.utils import format_plot
 
 
-def draw_env(state: State) -> tuple[chex.Array, chex.Array]:
+def _draw_env(state: State) -> tuple[chex.Array, chex.Array]:
     terrain = state.terrain.astype(float)
     terrain = jnp.stack([terrain, terrain, terrain, jnp.ones_like(terrain)], axis=2)
     trans_colors = jnp.array([1.0, 0.0, 0.0, 0.5])
@@ -23,7 +23,7 @@ def draw_env(state: State) -> tuple[chex.Array, chex.Array]:
 
 
 @partial(jax.jit, static_argnames="dims")
-def draw_ants(dims: tuple[int, int], state: State) -> tuple[chex.Array, chex.Array]:
+def _draw_ants(dims: tuple[int, int], state: State) -> tuple[chex.Array, chex.Array]:
     ants = jnp.zeros((*dims, 4))
     color = jnp.array([1.0, 0.0, 0.0, 1.0])
     ants = ants.at[state.colony.ants.pos[:, 0], state.colony.ants.pos[:, 1]].set(color)
@@ -114,16 +114,16 @@ class ThantsViewer(MatplotlibViewer[State]):
         fig, ax = format_plot(fig, ax, env_dims)
         plt.close(fig=fig)
 
-        terrain, nest = draw_env(states[0])
+        terrain, nest = _draw_env(states[0])
         ax.imshow(terrain)
         ax.imshow(nest)
 
-        ants, food = draw_ants(env_dims, states[0])
+        ants, food = _draw_ants(env_dims, states[0])
         food_img = ax.imshow(food)
         ants_img = ax.imshow(ants)
 
         def make_frame(state: State) -> tuple[AxesImage, AxesImage]:
-            step_ants, step_food = draw_ants(env_dims, state)
+            step_ants, step_food = _draw_ants(env_dims, state)
             food_img.set_data(step_food)
             ants_img.set_data(step_ants)
             return ants_img, food_img
@@ -145,11 +145,11 @@ class ThantsViewer(MatplotlibViewer[State]):
         ax.clear()
         env_dims = state.terrain.shape
 
-        terrain, nest = draw_env(state)
+        terrain, nest = _draw_env(state)
         ax.imshow(terrain)
         ax.imshow(nest)
 
-        ants, food = draw_ants(env_dims, state)
+        ants, food = _draw_ants(env_dims, state)
         ax.imshow(food)
         ax.imshow(ants)
 

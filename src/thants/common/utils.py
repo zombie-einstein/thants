@@ -35,6 +35,29 @@ def init_colony(
     n_agents: int,
     n_signals: int,
 ) -> Colony:
+    """
+    Initialise a colony at the centre of a rectangular region
+
+    Parameters
+    ----------
+    dims
+        Environment dimensions
+    x0
+        Ids of the origin of the rectangular region
+    x1
+        Dimensions of the rectangular region
+    nest_dims
+        Rectangular nest dimensions
+    n_agents
+        Number of agents
+    n_signals
+        Number of signal channels
+
+    Returns
+    -------
+    Colony
+        Initialised colony
+    """
     x0 = jnp.array(x0)
     x1 = jnp.array(x1)
     dims = jnp.array(dims)
@@ -63,16 +86,22 @@ def init_colony(
 def format_plot(
     fig: Figure, ax: Axes, env_dims: tuple[float, float]
 ) -> tuple[Figure, Axes]:
-    """Format an environment plot, remove ticks and bound to the environment dimensions.
+    """
+    Format an environment plot, remove ticks and bound to the environment dimensions.
 
-    Args:
-        fig: Matplotlib figure.
-        ax: Matplotlib axes.
-        env_dims: Environment dimensions (i.e. its boundaries).
+    Parameters
+    ----------
+    fig
+        Matplotlib figure
+    ax
+        Matplotlib axes
+    env_dims
+        Environment dimensions
 
-    Returns:
-        Figure: Formatted figure.
-        Axes: Formatted axes.
+    Returns
+    -------
+    tuple[Figure, Axes]
+        Formatted figure and axes
     """
     ax.set_xticks([])
     ax.set_yticks([])

@@ -24,6 +24,8 @@ def observations_from_state(state: State) -> Observations:
         - Food amounts in the local neighbourhood
         - Local neighbourhood indicating if a cell is a nest
         - Deposited signals in the local neighbourhood
+        - The food currently carried by each ant
+        - Passable terrain in the local neighbourhood
     """
     dims = state.colony.nest.shape
     idxs = jnp.indices((3, 3))

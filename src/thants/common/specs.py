@@ -7,6 +7,23 @@ from thants.common.types import Observations
 def get_observation_spec(
     num_agents: int, num_signals: int, carry_capacity: float
 ) -> specs.Spec[Observations]:
+    """
+    Get observation spec for a given colony
+
+    Parameters
+    ----------
+    num_agents
+        Number of ants in the colony
+    num_signals
+        Number of signal channels
+    carry_capacity
+        Ant carrying capacity
+
+    Returns
+    -------
+    Spec
+        Observation specification
+    """
     ants = specs.BoundedArray(
         shape=(num_agents, 9),
         minimum=0.0,
@@ -62,6 +79,21 @@ def get_observation_spec(
 
 
 def get_action_spec(num_agents: int, num_signals: int) -> specs.BoundedArray:
+    """
+    Get action specification for a colony
+
+    Parameters
+    ----------
+    num_agents
+        Number of ants in the colony
+    num_signals
+        Number of colony signal channels
+
+    Returns
+    -------
+    Spec
+        Action specification
+    """
     return specs.BoundedArray(
         shape=(num_agents,),
         minimum=0,
@@ -71,7 +103,17 @@ def get_action_spec(num_agents: int, num_signals: int) -> specs.BoundedArray:
 
 
 def get_reward_spec(num_agents: int) -> specs.Array:
-    return specs.Array(
-        shape=(num_agents,),
-        dtype=float,
-    )
+    """
+    Get reward specification for a colony
+
+    Parameters
+    ----------
+    num_agents
+        Number of agents in the colony
+
+    Returns
+    -------
+    Spec
+        Reward specification
+    """
+    return specs.Array(shape=(num_agents,), dtype=float)

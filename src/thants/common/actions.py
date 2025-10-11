@@ -24,7 +24,7 @@ def derive_actions(actions: chex.Array) -> Actions:
     Returns
     -------
     Actions
-        Struct of actions to apply to the environment
+        Struct of action updates to apply to the environment
     """
     directions = jnp.array([[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]])
 

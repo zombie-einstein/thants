@@ -8,7 +8,7 @@ from thants.multi.types import State
 
 def observations_from_state(state: State) -> list[Observations]:
     """
-    Generate individual agent observations from state
+    Generate individual agent observations from state for each colony
 
     Parameters
     ----------
@@ -17,13 +17,15 @@ def observations_from_state(state: State) -> list[Observations]:
 
     Returns
     -------
-    Observations
-        Struct containing observation components
+    list[Observations]
+        List of structs containing observation components for each colony
 
         - Local neighbourhood with flags indicating neighbouring ants
         - Food amounts in the local neighbourhood
         - Local neighbourhood indicating if a cell is a nest
         - Deposited signals in the local neighbourhood
+        - Food carried by each agent
+        - Local environment terrain
     """
     n_colonies = len(state.colonies)
     dims = state.food.shape

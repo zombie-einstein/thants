@@ -57,6 +57,21 @@ class NullRewardFn(RewardFn):
 
 class DeliveredFoodRewards(RewardFn):
     def __call__(self, old_state: State, new_state: State) -> chex.Array:
+        """
+        Provide rewards when ants deposit food on the nest
+
+        Parameters
+        ----------
+        old_state
+            State at the start of the step
+        new_state
+            State at the end of the step
+
+        Returns
+        -------
+        chex.Array
+            Array of individual agent rewards
+        """
         return delivered_food(
             new_state.colony.nest,
             new_state.colony.ants.pos,

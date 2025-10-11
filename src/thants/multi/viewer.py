@@ -55,7 +55,7 @@ class ThantsMultiColonyViewer(MatplotlibViewer[State]):
         colony_colormap: str = "plasma",
     ) -> None:
         """
-        Thants environment visualiser using Matplotlib
+        Thants multi-colony environment visualiser using Matplotlib
 
         Parameters
         ----------

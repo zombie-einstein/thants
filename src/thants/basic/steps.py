@@ -9,7 +9,7 @@ def update_positions(
     dims: tuple[int, int], pos: chex.Array, terrain: chex.Array, updates: chex.Array
 ) -> chex.Array:
     """
-    Update agent positions
+    Update agent positions, checking for collisions
 
     Parameters
     ----------
@@ -41,4 +41,19 @@ def update_positions(
 
 
 def clear_nest(nest: chex.Array, food: chex.Array) -> chex.Array:
+    """
+    Remove any food deposited on the nest
+
+    Parameters
+    ----------
+    nest
+        Array of nest flags
+    food
+        Food deposits state
+
+    Returns
+    -------
+    chex.Array
+        Update food state
+    """
     return jnp.where(nest, 0.0, food)

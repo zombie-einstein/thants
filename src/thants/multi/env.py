@@ -35,7 +35,7 @@ from thants.multi.viewer import ThantsMultiColonyViewer
 
 class ThantsMultiColony(Environment):
     """
-    Thants environment with dueling colonies
+    Thants environment with multiple colonies
     """
 
     def __init__(
@@ -58,21 +58,22 @@ class ThantsMultiColony(Environment):
         dims
             Environment grid dimensions
         colonies_generator
-            Initial ant state generator, initialises ants and nest values.
-            By default, initialises a `BasicAntGenerator` for a 100x100 space
-            and 25 agents.
+            Initial colonies state generator, initialises ants and nest states.
+            By default, initialises a `BasicColoniesGenerator` with 2 colonies,
+            with 25 agents each, and 2 signal channels.
         food_generator
-            Initial food state generator. By default, initialises a `BasicFoodGenerator`
-            that creates 5x5 rectangular patches of food at fixed intervals.
+            Food initial state generator and updator. By default, initialises a
+            `BasicFoodGenerator` that creates 5x5 rectangular patches of food at
+            fixed intervals.
         terrain_generator
             Terrain generator. By default, initialises a `OpenTerrainGenerator`
             that initialises a map with no obstacles.
         signal_dynamics
-            Signal propagation functionality
-            By default, implements a `BasicSignalPropagator` with 2 signal values.
+            Signal propagation functionality. By default, implements a
+            `BasicSignalPropagator` with 2 signal channels.
         reward_fn
-            Reward function, by default implements a default function that assigns
-            0 rewards to all agents.
+            Reward function, by default rewards agents for depositing food on
+            their own nest.
         viewer
             Environment visualiser. By default, initialises a viewer using a Matplotlib
             backend.
@@ -141,18 +142,19 @@ class ThantsMultiColony(Environment):
         - Apply food pick-up/deposit updates
         - Dissipate and propagate signals
         - Apply signal deposit actions
+        - Clear any food deposited on nests
 
         Parameters
         ----------
         state
             Current environment state
         actions
-            Array of individual ant actions
+            List of action arrays for each colony
 
         Returns
         -------
-        tuple[State, TimeStep]
-            Tuple containing new state and TimeStep
+        tuple[State, list[TimeStep]]
+            Tuple containing new state and list of TimeSteps for each colony
         """
         key, food_key, signals_key = jax.random.split(state.key, num=3)
         # Unwrap actions
@@ -228,7 +230,7 @@ class ThantsMultiColony(Environment):
     @cached_property
     def observation_spec(self) -> list[specs.Spec[Observations]]:
         """
-        Observation specification
+        List of observation specifications for each colony
 
         The observation consists of several components:
 
@@ -240,7 +242,7 @@ class ThantsMultiColony(Environment):
 
         Returns
         -------
-        ObservationSpec
+        list[ObservationSpec]
         """
         return [
             get_observation_spec(
@@ -252,14 +254,14 @@ class ThantsMultiColony(Environment):
     @cached_property
     def action_spec(self) -> list[specs.BoundedArray]:
         """
-        Action specification
+        List of action specifications for each colony
 
-        Actions are given by an array of integers indicating the discrete action
-        to be taken by each ant.
+        Actions for each colony are given by an array of integers indicating the
+        discrete action to be taken by each ant.
 
         Returns
         -------
-        ActionSpec
+        list[ActionSpec]
         """
         return [
             get_action_spec(n, self._colonies_generator.n_signals)
@@ -269,13 +271,13 @@ class ThantsMultiColony(Environment):
     @cached_property
     def reward_spec(self) -> list[specs.Array]:
         """
-        Reward specification
+        List of reward specifications for each colony
 
         Array of rewards for each ant agent
 
         Returns
         -------
-        RewardSpec
+        list[RewardSpec]
         """
         return [get_reward_spec(n) for n in self.num_agents]
 

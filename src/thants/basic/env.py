@@ -32,7 +32,7 @@ from thants.common.types import Ants, Colony, Observations
 
 class Thants(Environment):
     """
-    Thants environment
+    Thants single-colony environment
     """
 
     def __init__(
@@ -44,7 +44,7 @@ class Thants(Environment):
         signal_dynamics: Optional[SignalPropagator] = None,
         reward_fn: Optional[RewardFn] = None,
         viewer: Optional[Viewer[State]] = None,
-        max_steps: int = 1_000,
+        max_steps: int = 10_000,
         carry_capacity: float = 1.0,
     ) -> None:
         """
@@ -54,22 +54,23 @@ class Thants(Environment):
         ----------
         dims
             Environment grid dimensions
-        ant_generator
-            Initial ant state generator, initialises ants and nest values.
-            By default, initialises a `BasicAntGenerator` for a 100x100 space
-            and 25 agents.
+        colony_generator
+            Initial ant colony state generator, initialises ants and nest values.
+            By default, initialises a `BasicColonyGenerator` with 25 ants, 2
+            signal-channels and 5x5 nest.
         food_generator
-            Initial food state generator. By default, initialises a `BasicFoodGenerator`
-            that creates 5x5 rectangular patches of food at fixed intervals.
+            Food state generator and updater. By default, initialises a
+            `BasicFoodGenerator` that creates 5x5 rectangular patches of food at
+            fixed intervals.
         terrain_generator
             Terrain generator. By default, initialises a `OpenTerrainGenerator`
             that initialises a map with no obstacles.
         signal_dynamics
-            Signal propagation functionality
-            By default, implements a `BasicSignalPropagator` with 2 signal values.
+            Signal propagation functionality. By default, implements a
+            `BasicSignalPropagator`.
         reward_fn
-            Reward function, by default implements a default function that assigns
-            0 rewards to all agents.
+            Reward function, by default rewards are supplied when an ant drops food on
+            the nest.
         viewer
             Environment visualiser. By default, initialises a viewer using a Matplotlib
             backend.
@@ -137,13 +138,14 @@ class Thants(Environment):
         - Apply food pick-up/deposit updates
         - Dissipate and propagate signals
         - Apply signal deposit actions
+        - Clear any food returned to the nest
 
         Parameters
         ----------
         state
             Current environment state
         actions
-            Array of individual ant actions
+            Integer array of individual ant actions
 
         Returns
         -------

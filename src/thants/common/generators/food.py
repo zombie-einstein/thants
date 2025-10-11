@@ -8,6 +8,10 @@ from thants.common.utils import get_rectangular_indices
 
 
 class FoodGenerator(abc.ABC):
+    """
+    base food state generator and updater
+    """
+
     @abc.abstractmethod
     def init(self, dims: tuple[int, int], key: chex.PRNGKey) -> chex.Array:
         """
@@ -43,11 +47,17 @@ class FoodGenerator(abc.ABC):
         Returns
         -------
         chex.Array
-            New food state
+            Updated food state
         """
 
 
 class BasicFoodGenerator(FoodGenerator):
+    """
+    Basic food generator
+
+    Generator that initialises rectangular food blocks at fixed intervals.
+    """
+
     def __init__(
         self,
         food_dims: tuple[int, int],
@@ -98,7 +108,7 @@ class BasicFoodGenerator(FoodGenerator):
         """
         Initialise environment food state
 
-        Initialise empty state with randomly placed rectangle of food
+        Initialise empty state with a randomly placed rectangle of food
 
         Parameters
         ----------

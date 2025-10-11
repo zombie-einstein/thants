@@ -8,7 +8,7 @@ from thants.common.utils import init_colony
 
 class ColonyGenerator(abc.ABC):
     """
-    Base initial state generator and food updater
+    Base initial colony state generator
     """
 
     def __init__(self, n_agents: int, n_signals: int) -> None:
@@ -18,7 +18,7 @@ class ColonyGenerator(abc.ABC):
         Parameters
         ----------
         n_agents
-            Number of ant agents to initialise
+            Number of ant agents to initialise in the colony
         """
         self.n_agents = n_agents
         self.n_signals = n_signals
@@ -26,7 +26,7 @@ class ColonyGenerator(abc.ABC):
     @abc.abstractmethod
     def __call__(self, dims: tuple[int, int], key: chex.PRNGKey) -> Colony:
         """
-        Initialise ants, and nest
+        Initialise colony state
 
         Parameters
         ----------
@@ -37,22 +37,19 @@ class ColonyGenerator(abc.ABC):
 
         Returns
         -------
-        tuple[Ants, chex.Array]
-            Tuple containing ant, and nest states
+        Colony
+            Colony state containing ants, signals, and nest states
         """
 
 
 class BasicColonyGenerator(ColonyGenerator):
     """
-    Basic generator that creates rectangular nest and food blocks
+    Basic generator that creates rectangular nest and initial ant positions
 
     Generator that places:
 
     - A rectangular nest at the centre of the environment
-    - A rectangular food block at a random location
     - Ants in a square region at the centre of the environment
-
-    and then drops new blocks of food at random locations at fixed intervals.
     """
 
     def __init__(
@@ -68,15 +65,17 @@ class BasicColonyGenerator(ColonyGenerator):
         ----------
         n_agents
             Number of ant agents to generate
+        n_signals
+            Number of signal channels
         nest_dims
-            Dimensions of the nest region
+            Rectangular dimensions of the nest region
         """
         self.nest_dims = nest_dims
         super().__init__(n_agents, n_signals)
 
     def __call__(self, dims: tuple[int, int], key: chex.PRNGKey) -> Colony:
         """
-        Initialise ant and nest states
+        Initialise colony state
 
         Initialises a new initial state with
 
@@ -92,8 +91,8 @@ class BasicColonyGenerator(ColonyGenerator):
 
         Returns
         -------
-        tuple[Ants, chex.Array]
-            Tuple containing ant and nest states
+        Colony
+            Colony state containing ants, signals, and nest states
         """
         return init_colony(
             dims, (0, 0), dims, self.nest_dims, self.n_agents, self.n_signals

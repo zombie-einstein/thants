@@ -67,7 +67,7 @@ def update_food(
     capacity: float,
 ) -> tuple[chex.Array, list[chex.Array]]:
     """
-    Update food piles due to ant actions
+    Update food deposits due to ant actions
 
     Parameters
     ----------
@@ -86,11 +86,11 @@ def update_food(
 
     Returns
     -------
-    tuple[chex.Array, chex.Array]
+    tuple[chex.Array, list[chex.Array]]
         Tuple containing
 
         - Update food deposit state
-        - Updated ant carrying amounts
+        - List of updated ant carrying amounts for each colony
     """
 
     updates = [
@@ -107,6 +107,21 @@ def update_food(
 
 
 def clear_nest(nests: list[chex.Array], food: chex.Array) -> chex.Array:
+    """
+    Clear food deposited on each colony nest
+
+    Parameters
+    ----------
+    nests
+        List of nest flag arrays
+    food
+        Food state
+
+    Returns
+    -------
+    chex.Array
+        Food state
+    """
     removed = jnp.stack([jnp.where(nest, food, 0.0) for nest in nests])
     removed = jnp.sum(removed, axis=0)
     return food - removed

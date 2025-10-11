@@ -6,7 +6,7 @@ import jax.numpy as jnp
 
 class SignalPropagator(abc.ABC):
     """
-    Signal dynamics base-class
+    Signal dynamics base-class, responsible for updating signal state
     """
 
     @abc.abstractmethod
@@ -54,6 +54,21 @@ class BasicSignalPropagator(SignalPropagator):
         super().__init__()
 
     def __call__(self, key: chex.PRNGKey, signals: chex.Array) -> chex.Array:
+        """
+        Generate updated signal state
+
+        Parameters
+        ----------
+        key
+            JAX random key
+        signals
+            Signal state array
+
+        Returns
+        -------
+        chex.Array
+            New signal state
+        """
         signals = jnp.maximum(signals - self.decay_rate, 0.0)
         dissipate = 0.25 * self.dissipation_rate * signals
 
