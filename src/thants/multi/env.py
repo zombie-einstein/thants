@@ -3,7 +3,6 @@ from typing import Optional, Sequence, Tuple
 
 import chex
 import jax
-import jax.numpy as jnp
 from jumanji import Environment, specs
 from jumanji.types import TimeStep, restart, termination, transition
 from jumanji.viewer import Viewer
@@ -16,6 +15,11 @@ from thants.common.generators.terrain import (
     TerrainGenerator,
 )
 from thants.common.signals import BasicSignalPropagator, SignalPropagator
+from thants.common.specs import (
+    get_action_spec,
+    get_observation_spec,
+    get_reward_spec,
+)
 from thants.common.steps import deposit_signals
 from thants.common.types import Ants, Colony, Observations
 from thants.multi.colonies_generator import (
@@ -222,7 +226,7 @@ class ThantsMultiColony(Environment):
         return self._colonies_generator.n_agents
 
     @cached_property
-    def observation_spec(self) -> specs.Spec[Observations]:
+    def observation_spec(self) -> list[specs.Spec[Observations]]:
         """
         Observation specification
 
@@ -238,62 +242,15 @@ class ThantsMultiColony(Environment):
         -------
         ObservationSpec
         """
-        ants = specs.BoundedArray(
-            shape=(self.num_agents[0], 9),
-            minimum=0.0,
-            maximum=1.0,
-            dtype=float,
-            name="ants",
-        )
-        food = specs.BoundedArray(
-            shape=(self.num_agents[0], 9),
-            minimum=0.0,
-            maximum=jnp.inf,
-            dtype=float,
-            name="food",
-        )
-        signals = specs.BoundedArray(
-            shape=(self.num_agents[0], self._colonies_generator.n_signals, 9),
-            minimum=0.0,
-            maximum=jnp.inf,
-            dtype=float,
-            name="signals",
-        )
-        nest = specs.BoundedArray(
-            shape=(self.num_agents[0], 9),
-            minimum=0.0,
-            maximum=1.0,
-            dtype=float,
-            name="nest",
-        )
-        terrain = specs.BoundedArray(
-            shape=(self.num_agents[0], 9),
-            minimum=0.0,
-            maximum=1.0,
-            dtype=float,
-            name="terrain",
-        )
-        carrying = specs.BoundedArray(
-            shape=(self.num_agents[0],),
-            minimum=0.0,
-            maximum=self.carry_capacity,
-            dtype=float,
-            name="carrying",
-        )
-
-        return specs.Spec(
-            Observations,
-            "ObservationSpec",
-            ants=ants,
-            food=food,
-            signals=signals,
-            nest=nest,
-            carrying=carrying,
-            terrain=terrain,
-        )
+        return [
+            get_observation_spec(
+                n, self._colonies_generator.n_signals, self.carry_capacity
+            )
+            for n in self.num_agents
+        ]
 
     @cached_property
-    def action_spec(self) -> specs.BoundedArray:
+    def action_spec(self) -> list[specs.BoundedArray]:
         """
         Action specification
 
@@ -304,15 +261,13 @@ class ThantsMultiColony(Environment):
         -------
         ActionSpec
         """
-        return specs.BoundedArray(
-            shape=(self._colonies_generator.n_agents[0],),
-            minimum=0,
-            maximum=7 + self._colonies_generator.n_signals,
-            dtype=int,
-        )
+        return [
+            get_action_spec(n, self._colonies_generator.n_signals)
+            for n in self.num_agents
+        ]
 
     @cached_property
-    def reward_spec(self) -> specs.Array:
+    def reward_spec(self) -> list[specs.Array]:
         """
         Reward specification
 
@@ -322,10 +277,7 @@ class ThantsMultiColony(Environment):
         -------
         RewardSpec
         """
-        return specs.Array(
-            shape=(self._colonies_generator.n_agents[0],),
-            dtype=float,
-        )
+        return [get_reward_spec(n) for n in self.num_agents]
 
     def render(self, state: State) -> None:
         """Render a frame of the environment for a given state using matplotlib.

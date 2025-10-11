@@ -1,0 +1,77 @@
+import jax.numpy as jnp
+from jumanji import specs
+
+from thants.common.types import Observations
+
+
+def get_observation_spec(
+    num_agents: int, num_signals: int, carry_capacity: float
+) -> specs.Spec[Observations]:
+    ants = specs.BoundedArray(
+        shape=(num_agents, 9),
+        minimum=0.0,
+        maximum=1.0,
+        dtype=float,
+        name="ants",
+    )
+    food = specs.BoundedArray(
+        shape=(num_agents, 9),
+        minimum=0.0,
+        maximum=jnp.inf,
+        dtype=float,
+        name="food",
+    )
+    signals = specs.BoundedArray(
+        shape=(num_agents, num_signals, 9),
+        minimum=0.0,
+        maximum=jnp.inf,
+        dtype=float,
+        name="signals",
+    )
+    nest = specs.BoundedArray(
+        shape=(num_agents, 9),
+        minimum=0.0,
+        maximum=1.0,
+        dtype=float,
+        name="nest",
+    )
+    terrain = specs.BoundedArray(
+        shape=(num_agents, 9),
+        minimum=0.0,
+        maximum=1.0,
+        dtype=float,
+        name="terrain",
+    )
+    carrying = specs.BoundedArray(
+        shape=(num_agents,),
+        minimum=0.0,
+        maximum=carry_capacity,
+        dtype=float,
+        name="carrying",
+    )
+    return specs.Spec(
+        Observations,
+        "ObservationSpec",
+        ants=ants,
+        food=food,
+        signals=signals,
+        nest=nest,
+        carrying=carrying,
+        terrain=terrain,
+    )
+
+
+def get_action_spec(num_agents: int, num_signals: int) -> specs.BoundedArray:
+    return specs.BoundedArray(
+        shape=(num_agents,),
+        minimum=0,
+        maximum=7 + num_signals,
+        dtype=int,
+    )
+
+
+def get_reward_spec(num_agents: int) -> specs.Array:
+    return specs.Array(
+        shape=(num_agents,),
+        dtype=float,
+    )
