@@ -2,16 +2,34 @@
 name = "thants"
 version = "0.1.0"
 description = "Ants! On your GPU! With JAX!"
-authors = ["zombie-einstein <13398815+zombie-einstein@users.noreply.github.com>"]
+authors = ["zombie-einstein <zombie-einstein@proton.me>"]
 license = "MIT"
 readme = "README.md"
 packages = [{include = "thants", from = "src"}]
+keywords = [
+  "agent-based modelling",
+  "simulation",
+  "reinforcement-learning",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+  "License :: OSI Approved :: MIT License",
+  "Environment :: GPU",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Scientific/Engineering :: Artificial Life",
+]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.10,<4.0"
 esquilax = "^2.1.0"
 jumanji = "^1.1.1"
-
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.1"
