@@ -104,3 +104,9 @@ def update_food(
     new_carrying = [x[1] for x in updates]
 
     return new_food, new_carrying
+
+
+def clear_nest(nests: list[chex.Array], food: chex.Array) -> chex.Array:
+    removed = jnp.stack([jnp.where(nest, food, 0.0) for nest in nests])
+    removed = jnp.sum(removed, axis=0)
+    return food - removed

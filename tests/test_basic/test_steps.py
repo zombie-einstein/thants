@@ -3,7 +3,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-from thants.basic.steps import update_positions
+from thants.basic.steps import clear_nest, update_positions
 
 
 @pytest.mark.parametrize(
@@ -84,3 +84,15 @@ def test_terrain_blocking() -> None:
     new_pos = update_positions(dims, pos, terrain, updates)
     expected_pos = jnp.array([[0, 2]])
     assert jnp.array_equal(expected_pos, new_pos)
+
+
+def test_clear_nest() -> None:
+    dims = (2, 1)
+
+    nest = jnp.zeros(dims, dtype=bool).at[0].set(True)
+    food = jnp.ones(dims)
+
+    new_food = clear_nest(nest, food)
+    expected = jnp.array([[0.0], [1.0]])
+
+    assert jnp.allclose(new_food, expected)

@@ -11,8 +11,8 @@ from matplotlib.animation import FuncAnimation
 
 from thants.basic.colony_generator import BasicColonyGenerator, ColonyGenerator
 from thants.basic.observations import observations_from_state
-from thants.basic.rewards import NullRewardFn, RewardFn
-from thants.basic.steps import update_positions
+from thants.basic.rewards import DeliveredFoodRewards, RewardFn
+from thants.basic.steps import clear_nest, update_positions
 from thants.basic.types import State
 from thants.basic.viewer import ThantsViewer
 from thants.common.actions import derive_actions
@@ -83,7 +83,7 @@ class Thants(Environment):
         self._signal_dynamics = signal_dynamics or BasicSignalPropagator(
             decay_rate=0.002, dissipation_rate=0.2
         )
-        self._reward_fn = reward_fn or NullRewardFn()
+        self._reward_fn = reward_fn or DeliveredFoodRewards()
         self._viewer = viewer or ThantsViewer()
         super().__init__()
 
@@ -104,6 +104,8 @@ class Thants(Environment):
         key, colony_key, food_key, terrain_key = jax.random.split(key, num=4)
         colony = self._colony_generator(self.dims, colony_key)
         food = self._food_generator.init(self.dims, food_key)
+        # For safety clear any food placed on a nest
+        food = clear_nest(colony.nest, food)
         terrain = self._terrain_generator(self.dims, terrain_key)
         state = State(
             step=0,
@@ -169,10 +171,11 @@ class Thants(Environment):
         new_signals = self._signal_dynamics(signals_key, state.colony.signals)
         # Deposit signals
         new_signals = deposit_signals(new_signals, new_pos, actions.deposit_signals)
-
+        # Clear food dropped on the nest
+        new_food = clear_nest(state.colony.nest, new_food)
+        # Construct new state
         ants = Ants(pos=new_pos, health=state.colony.ants.health, carrying=new_carrying)
         colony = Colony(ants=ants, signals=new_signals, nest=state.colony.nest)
-
         new_state = State(
             step=state.step + 1,
             key=key,
@@ -180,7 +183,9 @@ class Thants(Environment):
             food=new_food,
             terrain=state.terrain,
         )
+        # Observations
         observations = observations_from_state(new_state)
+        # Rewards
         rewards = self._reward_fn(old_state=state, new_state=new_state)
         timestep = jax.lax.cond(
             state.step >= self.max_steps,

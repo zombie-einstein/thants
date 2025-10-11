@@ -1,6 +1,6 @@
 import jax.numpy as jnp
 
-from thants.multi.steps import update_food, update_positions
+from thants.multi.steps import clear_nest, update_food, update_positions
 
 
 def test_colony_movement() -> None:
@@ -60,3 +60,17 @@ def test_colony_food_update() -> None:
     assert jnp.allclose(new_carrying[0], expected_carry_0)
     expected_carry_1 = jnp.array([0.0])
     assert jnp.allclose(new_carrying[1], expected_carry_1)
+
+
+def test_clear_food() -> None:
+    dims = (3, 1)
+
+    nest_a = jnp.zeros(dims, dtype=bool).at[0].set(True)
+    nest_b = jnp.zeros(dims, dtype=bool).at[2].set(True)
+
+    food = jnp.ones(dims)
+
+    new_food = clear_nest([nest_a, nest_b], food)
+    expected = jnp.array([[0.0], [1.0], [0.0]])
+
+    assert jnp.allclose(new_food, expected)

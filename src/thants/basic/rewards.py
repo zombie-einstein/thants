@@ -4,6 +4,7 @@ import chex
 import jax.numpy as jnp
 
 from thants.basic.types import State
+from thants.common.rewards import delivered_food
 
 
 class RewardFn(abc.ABC):
@@ -52,3 +53,13 @@ class NullRewardFn(RewardFn):
             Array of individual agent rewards
         """
         return jnp.zeros_like(old_state.colony.ants.health)
+
+
+class DeliveredFoodRewards(RewardFn):
+    def __call__(self, old_state: State, new_state: State) -> chex.Array:
+        return delivered_food(
+            new_state.colony.nest,
+            new_state.colony.ants.pos,
+            old_state.colony.ants.carrying,
+            new_state.colony.ants.carrying,
+        )

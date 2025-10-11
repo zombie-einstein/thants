@@ -38,3 +38,7 @@ def update_positions(
     move_available = jnp.logical_and(move_occupied < 1, passable)
     new_pos = jnp.where(move_available[:, jnp.newaxis], new_pos, pos)
     return new_pos
+
+
+def clear_nest(nest: chex.Array, food: chex.Array) -> chex.Array:
+    return jnp.where(nest, 0.0, food)

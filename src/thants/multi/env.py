@@ -23,11 +23,10 @@ from thants.multi.colonies_generator import (
     ColoniesGenerator,
 )
 from thants.multi.observations import observations_from_state
-from thants.multi.steps import update_food, update_positions
+from thants.multi.rewards import DeliveredFoodRewards, RewardFn
+from thants.multi.steps import clear_nest, update_food, update_positions
 from thants.multi.types import State
 from thants.multi.viewer import ThantsMultiColonyViewer
-
-from .rewards import NullRewardFn, RewardFn
 
 
 class ThantsMultiColony(Environment):
@@ -89,7 +88,7 @@ class ThantsMultiColony(Environment):
         self._signal_dynamics = signal_dynamics or BasicSignalPropagator(
             decay_rate=0.002, dissipation_rate=0.2
         )
-        self._reward_fn = reward_fn or NullRewardFn()
+        self._reward_fn = reward_fn or DeliveredFoodRewards()
         self._viewer = viewer or ThantsMultiColonyViewer()
         super().__init__()
 
@@ -182,7 +181,9 @@ class ThantsMultiColony(Environment):
             deposit_signals(signals, pos, a.deposit_signals)
             for signals, pos, a in zip(new_signals, new_pos, actions)
         ]
-
+        # Clear food dropped on nests
+        new_food = clear_nest([c.nest for c in state.colonies], new_food)
+        # Gather updated state
         colonies = [
             Colony(
                 ants=Ants(pos=pos, health=c.ants.health, carrying=carrying),
@@ -193,7 +194,6 @@ class ThantsMultiColony(Environment):
                 state.colonies, new_pos, new_signals, new_carrying
             )
         ]
-
         new_state = State(
             step=state.step + 1,
             key=key,
@@ -201,9 +201,10 @@ class ThantsMultiColony(Environment):
             food=new_food,
             terrain=state.terrain,
         )
-        observations = observations_from_state(new_state)
+        # Rewards
         rewards = self._reward_fn(old_state=state, new_state=new_state)
-
+        # Observations
+        observations = observations_from_state(new_state)
         timestep = [
             jax.lax.cond(
                 state.step >= self.max_steps,
