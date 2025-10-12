@@ -1,9 +1,9 @@
 import chex
 import jax.numpy as jnp
 
-from thants.basic.observations import observations_from_state
-from thants.basic.types import State
 from thants.common.types import Ants, Colony, Observations
+from thants.mono.observations import observations_from_state
+from thants.mono.types import State
 
 
 def test_observations_from_state(key: chex.PRNGKey) -> None:

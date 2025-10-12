@@ -3,7 +3,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-from thants.basic.steps import clear_nest, update_positions
+from thants.mono.steps import clear_nest, update_positions
 
 
 @pytest.mark.parametrize(

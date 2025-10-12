@@ -3,8 +3,8 @@ import abc
 import chex
 import jax.numpy as jnp
 
-from thants.basic.types import State
 from thants.common.rewards import delivered_food
+from thants.mono.types import State
 
 
 class RewardFn(abc.ABC):

@@ -1,3 +1,5 @@
+from typing import Optional
+
 import jax.numpy as jnp
 from jumanji import specs
 
@@ -5,7 +7,10 @@ from thants.common.types import Observations
 
 
 def get_observation_spec(
-    num_agents: int, num_signals: int, carry_capacity: float
+    num_agents: int,
+    num_signals: int,
+    carry_capacity: float,
+    num_colonies: Optional[int] = None,
 ) -> specs.Spec[Observations]:
     """
     Get observation spec for a given colony
@@ -24,12 +29,22 @@ def get_observation_spec(
     Spec
         Observation specification
     """
-    ants = specs.BoundedArray(
-        shape=(num_agents, 9),
-        minimum=0.0,
-        maximum=1.0,
-        dtype=float,
-        name="ants",
+    ants = (
+        specs.BoundedArray(
+            shape=(num_agents, num_colonies, 9),
+            minimum=0.0,
+            maximum=1.0,
+            dtype=float,
+            name="ants",
+        )
+        if num_colonies
+        else specs.BoundedArray(
+            shape=(num_agents, 9),
+            minimum=0.0,
+            maximum=1.0,
+            dtype=float,
+            name="ants",
+        )
     )
     food = specs.BoundedArray(
         shape=(num_agents, 9),

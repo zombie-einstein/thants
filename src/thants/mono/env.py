@@ -8,12 +8,6 @@ from jumanji.types import TimeStep, restart, termination, transition
 from jumanji.viewer import Viewer
 from matplotlib.animation import FuncAnimation
 
-from thants.basic.colony_generator import BasicColonyGenerator, ColonyGenerator
-from thants.basic.observations import observations_from_state
-from thants.basic.rewards import DeliveredFoodRewards, RewardFn
-from thants.basic.steps import clear_nest, update_positions
-from thants.basic.types import State
-from thants.basic.viewer import ThantsViewer
 from thants.common.actions import derive_actions
 from thants.common.generators.food import BasicFoodGenerator, FoodGenerator
 from thants.common.generators.terrain import (
@@ -28,9 +22,15 @@ from thants.common.specs import (
 )
 from thants.common.steps import deposit_signals, update_food
 from thants.common.types import Ants, Colony, Observations
+from thants.mono.colony_generator import BasicColonyGenerator, ColonyGenerator
+from thants.mono.observations import observations_from_state
+from thants.mono.rewards import DeliveredFoodRewards, RewardFn
+from thants.mono.steps import clear_nest, update_positions
+from thants.mono.types import State
+from thants.mono.viewer import ThantsViewer
 
 
-class Thants(Environment):
+class ThantsMonoColony(Environment):
     """
     Thants single-colony environment
     """
@@ -205,6 +205,10 @@ class Thants(Environment):
     @cached_property
     def num_agents(self) -> int:
         return self._colony_generator.n_agents
+
+    @cached_property
+    def num_actions(self) -> int:
+        return 7 + self._colony_generator.n_signals
 
     @cached_property
     def observation_spec(self) -> specs.Spec[Observations]:

@@ -1,6 +1,6 @@
 import jax.numpy as jnp
 
-from thants.basic.colony_generator import BasicColonyGenerator
+from thants.mono.colony_generator import BasicColonyGenerator
 
 
 def test_basic_colony_generator(key) -> None:

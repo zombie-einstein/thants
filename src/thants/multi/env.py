@@ -228,6 +228,10 @@ class ThantsMultiColony(Environment):
         return self._colonies_generator.n_agents
 
     @cached_property
+    def num_actions(self) -> int:
+        return 7 + self._colonies_generator.n_signals
+
+    @cached_property
     def observation_spec(self) -> list[specs.Spec[Observations]]:
         """
         List of observation specifications for each colony
