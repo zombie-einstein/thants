@@ -7,7 +7,7 @@ from thants.common.types import Actions, SignalActions
 def test_derive_actions() -> None:
     action_idxs = jnp.arange(9)
 
-    actions = derive_actions(action_idxs)
+    actions = derive_actions(action_idxs, 0.1, 0.1, 0.1)
 
     assert isinstance(actions, Actions)
 

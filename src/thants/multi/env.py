@@ -49,6 +49,9 @@ class ThantsMultiColony(Environment):
         viewer: Optional[Viewer[State]] = None,
         max_steps: int = 1_000,
         carry_capacity: float = 1.0,
+        take_food_amount: float = 0.1,
+        deposit_food_amount: float = 0.1,
+        signal_deposit_amount: float = 0.1,
     ) -> None:
         """
         Initialise the environment
@@ -81,9 +84,18 @@ class ThantsMultiColony(Environment):
             Maximum environment steps
         carry_capacity
             Maximum ant carrying capacity
+        take_food_amount
+            Amount of (attempted) food taken by a take food action
+        deposit_food_amount
+            Amount of (attempted) food deposited by a deposit food action
+        signal_deposit_amount
+            Amount of signal deposited by the deposit signal action
         """
         self.dims = dims
         self.carry_capacity = carry_capacity
+        self.take_food_amount = take_food_amount
+        self.deposit_food_amount = deposit_food_amount
+        self.signal_deposit_amount = signal_deposit_amount
         self.max_steps = max_steps
         self._colonies_generator = colonies_generator or BasicColoniesGenerator(
             25, 2, (5, 5)
@@ -158,7 +170,15 @@ class ThantsMultiColony(Environment):
         """
         key, food_key, signals_key = jax.random.split(state.key, num=3)
         # Unwrap actions
-        actions = [derive_actions(a) for a in actions]
+        actions = [
+            derive_actions(
+                a,
+                take_food_amount=self.take_food_amount,
+                deposit_food_amount=self.deposit_food_amount,
+                signal_deposit_amount=self.signal_deposit_amount,
+            )
+            for a in actions
+        ]
 
         # Apply movements
         new_pos = update_positions(
