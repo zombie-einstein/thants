@@ -1,4 +1,3 @@
-from functools import partial
 from typing import Optional, Sequence, Tuple
 
 import chex
@@ -10,27 +9,30 @@ from jumanji.viewer import MatplotlibViewer
 from matplotlib.image import AxesImage
 from numpy.typing import NDArray
 
-from thants.common.utils import format_plot
+from thants.common.types import ColorScheme
+from thants.common.utils import format_plot, get_color_scheme
 from thants.mono.types import State
 
 
-def _draw_env(state: State) -> tuple[chex.Array, chex.Array]:
-    terrain = state.terrain.astype(float)
-    terrain = jnp.stack([terrain, terrain, terrain, jnp.ones_like(terrain)], axis=2)
-    trans_colors = jnp.array([1.0, 0.0, 0.0, 0.5])
-    nest = state.colony.nest[:, :, jnp.newaxis] * trans_colors[jnp.newaxis]
-    return terrain, nest
+def _draw_env(
+    state: State, colors: ColorScheme
+) -> tuple[chex.Array, chex.Array, chex.Array]:
+    terrain = state.terrain.astype(int)
+    terrain = colors.terrain.at[terrain].get()
+    nest_colors = jnp.clip(colors.ants + 0.1, 0.0, 1.0)
+    nest = state.colony.nest[:, :, jnp.newaxis] * nest_colors[jnp.newaxis]
+    food = jnp.full((*state.food.shape, 4), colors.food)
+    return terrain, nest, food
 
 
-@partial(jax.jit, static_argnames="dims")
-def _draw_ants(dims: tuple[int, int], state: State) -> tuple[chex.Array, chex.Array]:
+@jax.jit
+def _draw_ants(state: State, colors: ColorScheme) -> chex.Array:
+    dims = state.food.shape
     ants = jnp.zeros((*dims, 4))
-    color = jnp.array([1.0, 0.0, 0.0, 1.0])
-    ants = ants.at[state.colony.ants.pos[:, 0], state.colony.ants.pos[:, 1]].set(color)
-    food = jnp.stack(
-        [jnp.zeros(dims), jnp.ones(dims), jnp.zeros(dims), state.food], axis=2
+    ants = ants.at[state.colony.ants.pos[:, 0], state.colony.ants.pos[:, 1]].set(
+        colors.ants[0]
     )
-    return ants, food
+    return ants
 
 
 class ThantsViewer(MatplotlibViewer[State]):
@@ -38,6 +40,7 @@ class ThantsViewer(MatplotlibViewer[State]):
         self,
         name: str = "thants",
         render_mode: str = "human",
+        color_sequence: str = "tab20",
     ) -> None:
         """
         Thants environment visualiser using Matplotlib
@@ -48,7 +51,10 @@ class ThantsViewer(MatplotlibViewer[State]):
             Plot name, default ``thants``
         render_mode
             Default ``human``
+        color_sequence
+            Matplotlib colour sequence to sample from
         """
+        self.color_sequence = color_sequence
         super().__init__(name, render_mode)
 
     def _set_figure_size(self, dims: tuple[int, int]) -> None:
@@ -77,6 +83,7 @@ class ThantsViewer(MatplotlibViewer[State]):
         dims = state.food.shape
         self._set_figure_size(dims)
         fig, ax = self._get_fig_ax(padding=0.01)
+        ax.clear()
         fig, ax = format_plot(fig, ax, dims)
         self._draw(ax, state)
 
@@ -114,18 +121,12 @@ class ThantsViewer(MatplotlibViewer[State]):
         fig, ax = format_plot(fig, ax, env_dims)
         plt.close(fig=fig)
 
-        terrain, nest = _draw_env(states[0])
-        ax.imshow(terrain)
-        ax.imshow(nest)
-
-        ants, food = _draw_ants(env_dims, states[0])
-        food_img = ax.imshow(food)
-        ants_img = ax.imshow(ants)
+        colors, ants_img, food_img = self._draw(ax, states[0])
 
         def make_frame(state: State) -> tuple[AxesImage, AxesImage]:
-            step_ants, step_food = _draw_ants(env_dims, state)
-            food_img.set_data(step_food)
+            step_ants = _draw_ants(state, colors)
             ants_img.set_data(step_ants)
+            food_img.set_alpha(jnp.clip(state.food, 0.0, 1.0))
             return ants_img, food_img
 
         self._animation = matplotlib.animation.FuncAnimation(
@@ -141,17 +142,21 @@ class ThantsViewer(MatplotlibViewer[State]):
 
         return self._animation
 
-    def _draw(self, ax: plt.Axes, state: State) -> None:
-        ax.clear()
-        env_dims = state.terrain.shape
+    def _draw(
+        self, ax: plt.Axes, state: State
+    ) -> tuple[ColorScheme, AxesImage, AxesImage]:
+        colors = get_color_scheme(self.color_sequence, 1)
 
-        terrain, nest = _draw_env(state)
+        terrain, nest, food = _draw_env(state, colors)
+        ants = _draw_ants(state, colors)
+
         ax.imshow(terrain)
         ax.imshow(nest)
 
-        ants, food = _draw_ants(env_dims, state)
-        ax.imshow(food)
-        ax.imshow(ants)
+        food_img = ax.imshow(food, alpha=state.food)
+        ants_img = ax.imshow(ants)
+
+        return colors, ants_img, food_img
 
     def _get_fig_ax(
         self,

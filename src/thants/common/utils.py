@@ -2,10 +2,11 @@ import math
 
 import chex
 import jax.numpy as jnp
+from matplotlib import color_sequences
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from thants.common.types import Ants, Colony
+from thants.common.types import Ants, Colony, ColorScheme
 
 
 def get_rectangular_indices(rec_dims: tuple[int, int]) -> chex.Array:
@@ -109,3 +110,24 @@ def format_plot(
     ax.set_ylim(-0.5, env_dims[0] - 0.5)
 
     return fig, ax
+
+
+def get_color_scheme(color_sequence: str, n_colonies: int) -> ColorScheme:
+    """
+    Get a environment visualisation colour scheme from a matplotlib sequence
+
+    Parameters
+    ----------
+    color_sequence
+        Matplotlib color-sequence name
+    n_colonies
+        Number of colonies to visualise
+
+    Returns
+    -------
+    ColorScheme
+        Environment visualisation color-scheme
+    """
+    colors = color_sequences[color_sequence]
+    colors = jnp.array([(*i, 1.0) for i in colors[: 3 + n_colonies]])
+    return ColorScheme(terrain=colors[:2], food=colors[2], ants=colors[3:])

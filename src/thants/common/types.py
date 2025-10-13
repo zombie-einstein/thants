@@ -79,3 +79,18 @@ class Observations:
     nest: chex.Array  # (n_ants, 9)
     terrain: chex.Array  # (n_ants, 9)
     carrying: chex.Array  # (n_ants,)
+
+
+@dataclass
+class ColorScheme:
+    """
+    Visualisation color-scheme, given as an array of rgb values
+
+    ants: Array of colors for each colony
+    food: Color to represent food
+    terrain: Array of blocked/passable terrain cells
+    """
+
+    ants: chex.Array  # (n-colonies, 4)
+    food: chex.Array  # (4,)
+    terrain: chex.Array  # (2, 4)

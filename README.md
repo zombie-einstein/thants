@@ -85,6 +85,13 @@ env.animate(state_history, 100, "multi_colony.gif")
 
 ## Environment
 
+<div align="center">
+  <img src="https://github.com/zombie-einstein/thants/raw/main/.github/images/thants_env.gif" />
+  <br>
+  <em>A Thants environment with two competing colonies.</em>
+</div>
+<br>
+
 The environment is modelled as a grid, wrapped at the boundaries. Ants (the agents)
 occupy individual cells on the grid (and cannot overlap). Ants can pick up, carry,
 and deposit food, or deposit persistent signals that can be observed by other ants
