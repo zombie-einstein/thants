@@ -88,6 +88,7 @@ class ThantsMultiColonyViewer(MatplotlibViewer[State]):
         dims = state.food.shape
         self._set_figure_size(dims)
         fig, ax = self._get_fig_ax(padding=0.01)
+        ax.clear()
         fig, ax = format_plot(fig, ax, dims)
         self._draw(ax, state)
 
@@ -150,8 +151,6 @@ class ThantsMultiColonyViewer(MatplotlibViewer[State]):
     def _draw(
         self, ax: plt.Axes, state: State
     ) -> tuple[ColorScheme, AxesImage, AxesImage]:
-        ax.clear()
-
         colors = get_color_scheme(self.color_sequence, len(state.colonies))
 
         terrain, nests, food = _draw_env(state, colors)
