@@ -67,10 +67,11 @@ def test_clear_food() -> None:
 
     nest_a = jnp.zeros(dims, dtype=bool).at[0].set(True)
     nest_b = jnp.zeros(dims, dtype=bool).at[2].set(True)
+    nests = jnp.stack([nest_a, nest_b], axis=0)
 
     food = jnp.ones(dims)
 
-    new_food = clear_nest([nest_a, nest_b], food)
+    new_food = clear_nest(nests, food)
     expected = jnp.array([[0.0], [1.0], [0.0]])
 
     assert jnp.allclose(new_food, expected)

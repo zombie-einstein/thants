@@ -2,6 +2,7 @@ import jax.numpy as jnp
 
 from thants.common.types import Ants, Colony
 from thants.multi.rewards import DeliveredFoodRewards
+from thants.multi.steps import merge_colonies
 from thants.multi.types import State
 
 
@@ -25,18 +26,20 @@ def test_food_reward_function(key):
     s0 = State(
         step=0,
         key=key,
-        colonies=[
-            Colony(
-                ants=Ants(pos=pos_a, carrying=carrying_before, health=health),
-                nest=nest_a,
-                signals=signals,
-            ),
-            Colony(
-                ants=Ants(pos=pos_b, carrying=carrying_before, health=health),
-                nest=nest_b,
-                signals=signals,
-            ),
-        ],
+        colonies=merge_colonies(
+            [
+                Colony(
+                    ants=Ants(pos=pos_a, carrying=carrying_before, health=health),
+                    nest=nest_a,
+                    signals=signals,
+                ),
+                Colony(
+                    ants=Ants(pos=pos_b, carrying=carrying_before, health=health),
+                    nest=nest_b,
+                    signals=signals,
+                ),
+            ]
+        ),
         food=food,
         terrain=terrain,
     )
@@ -44,25 +47,27 @@ def test_food_reward_function(key):
     s1 = State(
         step=0,
         key=key,
-        colonies=[
-            Colony(
-                ants=Ants(pos=pos_a, carrying=carrying_after, health=health),
-                nest=nest_a,
-                signals=signals,
-            ),
-            Colony(
-                ants=Ants(pos=pos_b, carrying=carrying_after, health=health),
-                nest=nest_b,
-                signals=signals,
-            ),
-        ],
+        colonies=merge_colonies(
+            [
+                Colony(
+                    ants=Ants(pos=pos_a, carrying=carrying_after, health=health),
+                    nest=nest_a,
+                    signals=signals,
+                ),
+                Colony(
+                    ants=Ants(pos=pos_b, carrying=carrying_after, health=health),
+                    nest=nest_b,
+                    signals=signals,
+                ),
+            ]
+        ),
         food=food,
         terrain=terrain,
     )
 
     reward_fn = DeliveredFoodRewards()
 
-    rewards = reward_fn(s0, s1)
+    rewards = reward_fn([3, 3], s0, s1)
 
     assert isinstance(rewards, list)
     assert len(rewards) == 2

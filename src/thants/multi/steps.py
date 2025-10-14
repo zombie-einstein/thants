@@ -5,6 +5,8 @@ import chex
 import jax.numpy as jnp
 
 from thants.common.steps import update_food as _update_food
+from thants.common.types import Ants, Colony, SignalActions
+from thants.multi.types import Colonies
 
 
 def _move(
@@ -106,7 +108,7 @@ def update_food(
     return new_food, new_carrying
 
 
-def clear_nest(nests: list[chex.Array], food: chex.Array) -> chex.Array:
+def clear_nest(nests: chex.Array, food: chex.Array) -> chex.Array:
     """
     Clear food deposited on each colony nest
 
@@ -122,6 +124,38 @@ def clear_nest(nests: list[chex.Array], food: chex.Array) -> chex.Array:
     chex.Array
         Food state
     """
-    removed = jnp.stack([jnp.where(nest, food, 0.0) for nest in nests])
-    removed = jnp.sum(removed, axis=0)
-    return food - removed
+    nests = jnp.any(nests, axis=0)
+    return jnp.where(nests, 0.0, food)
+
+
+def merge_colonies(colonies: list[Colony]) -> Colonies:
+    ant_pos = jnp.concatenate([c.ants.pos for c in colonies], axis=0)
+    ant_carrying = jnp.concatenate([c.ants.carrying for c in colonies], axis=0)
+    ant_health = jnp.concatenate([c.ants.health for c in colonies], axis=0)
+    colony_idx = jnp.concatenate(
+        [jnp.full(c.ants.carrying.shape, i, dtype=int) for i, c in enumerate(colonies)]
+    )
+    signals = jnp.stack([c.signals for c in colonies], axis=0)
+    nests = jnp.stack([c.nest for c in colonies], axis=0)
+
+    return Colonies(
+        ants=Ants(
+            pos=ant_pos,
+            carrying=ant_carrying,
+            health=ant_health,
+        ),
+        colony_idx=colony_idx,
+        signals=signals,
+        nests=nests,
+    )
+
+
+def deposit_signals(
+    signals: chex.Array,
+    pos: chex.Array,
+    colony_idx: chex.Array,
+    deposits: SignalActions,
+) -> chex.Array:
+    return signals.at[colony_idx, deposits.channel, pos[:, 0], pos[:, 1]].add(
+        deposits.amount
+    )

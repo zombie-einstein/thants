@@ -74,10 +74,10 @@ class BasicSignalPropagator(SignalPropagator):
 
         signals = (
             (1.0 - self.dissipation_rate) * signals
-            + jnp.roll(dissipate, shift=-1, axis=1)
-            + jnp.roll(dissipate, shift=1, axis=1)
-            + jnp.roll(dissipate, shift=-1, axis=2)
-            + jnp.roll(dissipate, shift=1, axis=2)
+            + jnp.roll(dissipate, shift=-1, axis=-1)
+            + jnp.roll(dissipate, shift=1, axis=-1)
+            + jnp.roll(dissipate, shift=-1, axis=-2)
+            + jnp.roll(dissipate, shift=1, axis=-2)
         )
 
         return signals

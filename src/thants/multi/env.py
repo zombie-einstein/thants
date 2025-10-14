@@ -3,6 +3,7 @@ from typing import Optional, Sequence, Tuple
 
 import chex
 import jax
+import jax.numpy as jnp
 from jumanji import Environment, specs
 from jumanji.types import TimeStep, restart, termination, transition
 from jumanji.viewer import Viewer
@@ -20,16 +21,17 @@ from thants.common.specs import (
     get_observation_spec,
     get_reward_spec,
 )
-from thants.common.steps import deposit_signals
-from thants.common.types import Ants, Colony, Observations
+from thants.common.steps import update_food
+from thants.common.types import Ants, Observations
+from thants.mono.steps import update_positions
 from thants.multi.colonies_generator import (
     BasicColoniesGenerator,
     ColoniesGenerator,
 )
 from thants.multi.observations import observations_from_state
 from thants.multi.rewards import DeliveredFoodRewards, RewardFn
-from thants.multi.steps import clear_nest, update_food, update_positions
-from thants.multi.types import State
+from thants.multi.steps import clear_nest, deposit_signals, merge_colonies
+from thants.multi.types import Colonies, State
 from thants.multi.viewer import ThantsMultiColonyViewer
 
 
@@ -59,7 +61,7 @@ class ThantsMultiColony(Environment):
         Parameters
         ----------
         dims
-            Environment grid dimensions
+            Environment grid dimensions, default is a 50x100 environment
         colonies_generator
             Initial colonies state generator, initialises ants and nest states.
             By default, initialises a `BasicColoniesGenerator` with 2 colonies,
@@ -125,6 +127,7 @@ class ThantsMultiColony(Environment):
         """
         key, colony_key, food_key, terrain_key = jax.random.split(key, num=4)
         colonies = self._colonies_generator(self.dims, colony_key)
+        colonies = merge_colonies(colonies)
         food = self._food_generator.init(self.dims, food_key)
         terrain = self._terrain_generator(self.dims, terrain_key)
         state = State(
@@ -134,7 +137,7 @@ class ThantsMultiColony(Environment):
             food=food,
             terrain=terrain,
         )
-        observations = observations_from_state(state)
+        observations = observations_from_state(self.num_agents, state)
         time_steps = [
             restart(observation=obs, shape=(n,))
             for obs, n in zip(observations, self._colonies_generator.n_agents)
@@ -169,57 +172,50 @@ class ThantsMultiColony(Environment):
             Tuple containing new state and list of TimeSteps for each colony
         """
         key, food_key, signals_key = jax.random.split(state.key, num=3)
+        actions = jnp.concatenate(actions, axis=0)
         # Unwrap actions
-        actions = [
-            derive_actions(
-                a,
-                take_food_amount=self.take_food_amount,
-                deposit_food_amount=self.deposit_food_amount,
-                signal_deposit_amount=self.signal_deposit_amount,
-            )
-            for a in actions
-        ]
+        actions = derive_actions(
+            actions,
+            take_food_amount=self.take_food_amount,
+            deposit_food_amount=self.deposit_food_amount,
+            signal_deposit_amount=self.signal_deposit_amount,
+        )
 
         # Apply movements
         new_pos = update_positions(
             self.dims,
-            [c.ants.pos for c in state.colonies],
+            state.colonies.ants.pos,
             state.terrain,
-            [a.movements for a in actions],
+            actions.movements,
         )
         # Pick up and drop-off food for each colony
         new_food, new_carrying = update_food(
             state.food,
             new_pos,
-            [a.take_food for a in actions],
-            [a.deposit_food for a in actions],
-            [c.ants.carrying for c in state.colonies],
+            actions.take_food,
+            actions.deposit_food,
+            state.colonies.ants.carrying,
             self.carry_capacity,
         )
         # Drop any new food
         new_food = self._food_generator.update(food_key, state.step, new_food)
         # Propagate / disperse signals
-        new_signals = [
-            self._signal_dynamics(signals_key, c.signals) for c in state.colonies
-        ]
+        new_signals = self._signal_dynamics(signals_key, state.colonies.signals)
         # Deposit signals
-        new_signals = [
-            deposit_signals(signals, pos, a.deposit_signals)
-            for signals, pos, a in zip(new_signals, new_pos, actions)
-        ]
+        new_signals = deposit_signals(
+            new_signals, new_pos, state.colonies.colony_idx, actions.deposit_signals
+        )
         # Clear food dropped on nests
-        new_food = clear_nest([c.nest for c in state.colonies], new_food)
+        new_food = clear_nest(state.colonies.nests, new_food)
         # Gather updated state
-        colonies = [
-            Colony(
-                ants=Ants(pos=pos, health=c.ants.health, carrying=carrying),
-                signals=signals,
-                nest=c.nest,
-            )
-            for c, pos, signals, carrying in zip(
-                state.colonies, new_pos, new_signals, new_carrying
-            )
-        ]
+        colonies = Colonies(
+            ants=Ants(
+                pos=new_pos, health=state.colonies.ants.health, carrying=new_carrying
+            ),
+            colony_idx=state.colonies.colony_idx,
+            signals=new_signals,
+            nests=state.colonies.nests,
+        )
         new_state = State(
             step=state.step + 1,
             key=key,
@@ -228,9 +224,9 @@ class ThantsMultiColony(Environment):
             terrain=state.terrain,
         )
         # Rewards
-        rewards = self._reward_fn(old_state=state, new_state=new_state)
+        rewards = self._reward_fn(self.num_agents, old_state=state, new_state=new_state)
         # Observations
-        observations = observations_from_state(new_state)
+        observations = observations_from_state(self.num_agents, new_state)
         timestep = [
             jax.lax.cond(
                 state.step >= self.max_steps,

@@ -2,14 +2,24 @@ import abc
 
 import chex
 import jax.numpy as jnp
+import numpy as np
 
 from thants.common.rewards import delivered_food
 from thants.multi.types import State
 
 
+def _get_boundaries(colony_sizes: list[int]) -> np.typing.NDArray:
+    boundaries = [0] + colony_sizes
+    boundaries = np.array(boundaries)
+    boundaries = np.cumsum(boundaries)
+    return boundaries
+
+
 class RewardFn(abc.ABC):
     @abc.abstractmethod
-    def __call__(self, old_state: State, new_state: State) -> list[chex.Array]:
+    def __call__(
+        self, colony_sizes: list[int], old_state: State, new_state: State
+    ) -> list[chex.Array]:
         """
         Generate individual ant rewards for each colony
 
@@ -28,7 +38,9 @@ class RewardFn(abc.ABC):
 
 
 class NullRewardFn(RewardFn):
-    def __call__(self, old_state: State, new_state: State) -> list[chex.Array]:
+    def __call__(
+        self, colony_sizes: list[int], old_state: State, new_state: State
+    ) -> list[chex.Array]:
         """
         Assigns 0 reward to all agents
 
@@ -44,11 +56,13 @@ class NullRewardFn(RewardFn):
         list[chex.Array]
             List of rewards arrays per colony
         """
-        return [jnp.zeros(c.ants.pos.shape[:1]) for c in new_state.colonies]
+        return [jnp.zeros(n) for n in colony_sizes]
 
 
 class DeliveredFoodRewards(RewardFn):
-    def __call__(self, old_state: State, new_state: State) -> list[chex.Array]:
+    def __call__(
+        self, colony_sizes: list[int], old_state: State, new_state: State
+    ) -> list[chex.Array]:
         """
         Assigns rewards for ants depositing food on their own nest
 
@@ -64,12 +78,12 @@ class DeliveredFoodRewards(RewardFn):
         list[chex.Array]
             List of rewards arrays per colony
         """
-        return [
-            delivered_food(
-                new_colony.nest,
-                new_colony.ants.pos,
-                old_colony.ants.carrying,
-                new_colony.ants.carrying,
-            )
-            for old_colony, new_colony in zip(old_state.colonies, new_state.colonies)
-        ]
+        boundaries = _get_boundaries(colony_sizes)
+        rewards = delivered_food(
+            new_state.colonies.nests,
+            new_state.colonies.ants.pos,
+            old_state.colonies.ants.carrying,
+            new_state.colonies.ants.carrying,
+            colony_idxs=new_state.colonies.colony_idx,
+        )
+        return [rewards[a:b] for a, b in zip(boundaries[:-1], boundaries[1:])]

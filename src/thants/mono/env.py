@@ -37,7 +37,7 @@ class ThantsMonoColony(Environment):
 
     def __init__(
         self,
-        dims: tuple[int, int],
+        dims: tuple[int, int] = (50, 50),
         colony_generator: Optional[ColonyGenerator] = None,
         food_generator: Optional[FoodGenerator] = None,
         terrain_generator: Optional[TerrainGenerator] = None,
@@ -56,7 +56,7 @@ class ThantsMonoColony(Environment):
         Parameters
         ----------
         dims
-            Environment grid dimensions
+            Environment grid dimensions, default is a 50x50 environment
         colony_generator
             Initial ant colony state generator, initialises ants and nest values.
             By default, initialises a `BasicColonyGenerator` with 25 ants, 2
