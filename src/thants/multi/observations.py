@@ -1,17 +1,22 @@
 import chex
 import jax
 import jax.numpy as jnp
+import numpy as np
 
-from thants.common.types import Colony, Observations
+from thants.common.types import Observations
 from thants.multi.types import State
 
 
-def observations_from_state(state: State) -> list[Observations]:
+def observations_from_state(
+    colony_sizes: list[int], state: State
+) -> list[Observations]:
     """
     Generate individual agent observations from state for each colony
 
     Parameters
     ----------
+    colony_sizes
+        List of colony sizes
     state
         Environment state
 
@@ -27,7 +32,7 @@ def observations_from_state(state: State) -> list[Observations]:
         - Food carried by each agent
         - Local environment terrain
     """
-    n_colonies = len(state.colonies)
+    n_colonies = len(colony_sizes)
     dims = state.food.shape
     dims_arr = jnp.array([dims])
     idxs = jnp.indices((3, 3))
@@ -39,37 +44,49 @@ def observations_from_state(state: State) -> list[Observations]:
     def get_view(arr: chex.Array, x: chex.Array) -> chex.Array:
         return arr.at[x[:, 0], x[:, 1]].get()
 
-    def get_signals(arr: chex.Array, x: chex.Array) -> chex.Array:
-        return arr.at[:, x[:, 0], x[:, 1]].get()
+    def get_signals(i: int, arr: chex.Array, x: chex.Array) -> chex.Array:
+        return arr.at[i, :, x[:, 0], x[:, 1]].get()
 
-    occupation = jnp.zeros(dims, dtype=float)
-    occupations = [
-        occupation.at[c.ants.pos[:, 0], c.ants.pos[:, 1]].set(1.0)
-        for c in state.colonies
+    def get_nest(i: int, arr: chex.Array, x: chex.Array) -> chex.Array:
+        return arr.at[x[:, 0], x[:, 1]].get() == (i + 1)
+
+    occupation = jnp.zeros((n_colonies, *dims), dtype=float)
+    occupation = occupation.at[
+        state.colonies.colony_idx,
+        state.colonies.ants.pos[:, 0],
+        state.colonies.ants.pos[:, 1],
+    ].set(1.0)
+
+    view_idxs = jax.vmap(lambda x: (idxs + x) % dims_arr)(state.colonies.ants.pos)
+    a_idxs = jax.vmap(lambda i: (i + jnp.arange(n_colonies)) % n_colonies)(
+        state.colonies.colony_idx
+    )
+    ants = jax.vmap(get_ant_view, in_axes=(None, 0, 0))(occupation, a_idxs, view_idxs)
+    food = jax.vmap(get_view, in_axes=(None, 0))(state.food, view_idxs)
+    signals = jax.vmap(get_signals, in_axes=(0, None, 0))(
+        state.colonies.colony_idx, state.colonies.signals, view_idxs
+    )
+    nest = jax.vmap(get_nest, in_axes=(0, None, 0))(
+        state.colonies.colony_idx, state.colonies.nests, view_idxs
+    )
+    terrain = jax.vmap(get_view, in_axes=(None, 0))(state.terrain, view_idxs).astype(
+        float
+    )
+
+    boundaries = [0] + colony_sizes
+    boundaries = np.array(boundaries)
+    boundaries = np.cumsum(boundaries)
+
+    observations = [
+        Observations(
+            ants=ants[a:b],
+            food=food[a:b],
+            signals=signals[a:, b],
+            nest=nest[a:b],
+            terrain=terrain[a:b],
+            carrying=state.colonies.ants.carrying[a:b],
+        )
+        for a, b in zip(boundaries[:-1], boundaries[1:])
     ]
-    occupation = jnp.stack(occupations, axis=0)
 
-    def get_observation(i, colony: Colony) -> Observations:
-        view_idxs = jax.vmap(lambda x: (idxs + x) % dims_arr)(colony.ants.pos)
-        a_idxs = (i + jnp.arange(n_colonies)) % n_colonies
-        ants = jax.vmap(get_ant_view, in_axes=(None, None, 0))(
-            occupation, a_idxs, view_idxs
-        )
-        food = jax.vmap(get_view, in_axes=(None, 0))(state.food, view_idxs)
-        signals = jax.vmap(get_signals, in_axes=(None, 0))(colony.signals, view_idxs)
-        nest = jax.vmap(get_view, in_axes=(None, 0))(colony.nest, view_idxs).astype(
-            float
-        )
-        terrain = jax.vmap(get_view, in_axes=(None, 0))(
-            state.terrain, view_idxs
-        ).astype(float)
-        return Observations(
-            ants=ants,
-            food=food,
-            signals=signals,
-            nest=nest,
-            carrying=colony.ants.carrying,
-            terrain=terrain,
-        )
-
-    return [get_observation(i, colony) for i, colony in enumerate(state.colonies)]
+    return observations

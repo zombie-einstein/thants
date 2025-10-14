@@ -20,11 +20,9 @@ def _draw_env(
     terrain = state.terrain.astype(int)
     terrain = colors.terrain.at[terrain].get()
     nest_colors = jnp.clip(colors.ants + 0.1, 0.0, 1.0)
-    nests = [
-        colony.nest[:, :, jnp.newaxis] * nest_colors[i, jnp.newaxis]
-        for i, colony in enumerate(state.colonies)
-    ]
-    nests = jnp.sum(jnp.stack(nests, axis=0), axis=0)
+    empty_color = jnp.zeros((1, 4))
+    nest_colors = jnp.concatenate([empty_color, nest_colors], axis=0)
+    nests = nest_colors[state.colonies.nests]
     food = jnp.full((*state.food.shape, 4), colors.food)
     return terrain, nests, food
 
@@ -33,10 +31,9 @@ def _draw_env(
 def _draw_ants(state: State, colors: ColorScheme) -> chex.Array:
     dims = state.food.shape
     ants = jnp.zeros((*dims, 4))
-
-    for i, colony in enumerate(state.colonies):
-        ants = ants.at[colony.ants.pos[:, 0], colony.ants.pos[:, 1]].set(colors.ants[i])
-
+    ants = ants.at[state.colonies.ants.pos[:, 0], state.colonies.ants.pos[:, 1]].set(
+        colors.ants[state.colonies.colony_idx]
+    )
     return ants
 
 

@@ -7,7 +7,7 @@ from thants.common.steps import deposit_signals
 from thants.common.types import SignalActions
 
 
-def test_total_signals_preserved(key) -> None:
+def test_total_signals_preserved_single(key) -> None:
     signals = jnp.zeros((2, 3, 3))
     signals = signals.at[0, 1, 1].set(1.0)
 
@@ -25,6 +25,30 @@ def test_total_signals_preserved(key) -> None:
 
     assert jnp.allclose(total_signals[:, 0], 1.0)
     assert jnp.allclose(total_signals[:, 1], 0.0)
+
+
+def test_total_signals_preserved_multi(key) -> None:
+    signals = jnp.zeros((3, 2, 3, 3))
+    signals = signals.at[0, 0, 1, 1].set(1.0)
+    signals = signals.at[1, 0, 1, 1].set(1.0)
+
+    propagator = BasicSignalPropagator(0.0, 0.1)
+
+    def step(s: chex.Array, _: None) -> tuple[chex.Array, chex.Array]:
+        s = propagator(key, s)
+        return s, s
+
+    _, signal_ts = jax.lax.scan(step, signals, None, 20)
+
+    assert signal_ts.shape == (20, 3, 2, 3, 3)
+
+    total_signals = jnp.sum(signal_ts, axis=(3, 4))
+
+    assert jnp.allclose(total_signals[:, 0, 0], 1.0)
+    assert jnp.allclose(total_signals[:, 0, 1], 0.0)
+    assert jnp.allclose(total_signals[:, 1, 0], 1.0)
+    assert jnp.allclose(total_signals[:, 1, 1], 0.0)
+    assert jnp.allclose(total_signals[:, 2, :], 0.0)
 
 
 def test_deposit_signals() -> None:

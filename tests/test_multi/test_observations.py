@@ -3,6 +3,7 @@ import jax.numpy as jnp
 
 from thants.common.types import Ants, Colony
 from thants.multi.observations import observations_from_state
+from thants.multi.steps import merge_colonies
 from thants.multi.types import State
 
 
@@ -28,6 +29,8 @@ def test_colony_observations(key: chex.PRNGKey) -> None:
         ),
     ]
 
+    colonies = merge_colonies(colonies)
+
     state = State(
         step=0,
         key=key,
@@ -36,7 +39,7 @@ def test_colony_observations(key: chex.PRNGKey) -> None:
         terrain=jnp.ones(dims, dtype=bool),
     )
 
-    observations = observations_from_state(state)
+    observations = observations_from_state([2, 1], state)
 
     assert isinstance(observations, list)
     assert len(observations) == 2
