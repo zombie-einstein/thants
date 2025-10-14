@@ -24,6 +24,8 @@ def delivered_food(
         Food carried by ants at the start of the step
     carrying_after
         Food carried at the end of the step
+    colony_idxs
+        Colony indices of individual ants
 
     Returns
     -------
@@ -35,7 +37,8 @@ def delivered_food(
     if colony_idxs is None:
         is_nest = nest.at[pos[:, 0], pos[:, 1]].get()
     else:
-        is_nest = nest.at[colony_idxs, pos[:, 0], pos[:, 1]].get()
+        is_nest = nest.at[pos[:, 0], pos[:, 1]].get()
+        is_nest = (is_nest - 1) == colony_idxs
 
     rewards = jnp.where(is_nest, d_carrying, 0.0)
     return rewards

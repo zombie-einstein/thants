@@ -1,6 +1,13 @@
 import jax.numpy as jnp
 
-from thants.multi.steps import clear_nest, update_food, update_positions
+from thants.common.types import Ants, Colony
+from thants.multi.steps import (
+    clear_nest,
+    merge_colonies,
+    update_food,
+    update_positions,
+)
+from thants.multi.types import Colonies
 
 
 def test_colony_movement() -> None:
@@ -65,13 +72,47 @@ def test_colony_food_update() -> None:
 def test_clear_food() -> None:
     dims = (3, 1)
 
-    nest_a = jnp.zeros(dims, dtype=bool).at[0].set(True)
-    nest_b = jnp.zeros(dims, dtype=bool).at[2].set(True)
-    nests = jnp.stack([nest_a, nest_b], axis=0)
-
+    nests = jnp.array([[1], [0], [2]])
     food = jnp.ones(dims)
 
     new_food = clear_nest(nests, food)
     expected = jnp.array([[0.0], [1.0], [0.0]])
 
     assert jnp.allclose(new_food, expected)
+
+
+def test_merge_colonies():
+    dims = (2, 2)
+
+    colony_a = Colony(
+        ants=Ants(
+            pos=jnp.array([[0, 0], [0, 1]]),
+            carrying=jnp.zeros((2,)),
+            health=jnp.ones((2,)),
+        ),
+        nest=jnp.zeros(dims, dtype=bool).at[0, 0].set(True),
+        signals=jnp.zeros((2, *dims)),
+    )
+    colony_b = Colony(
+        ants=Ants(
+            pos=jnp.array([[1, 1]]),
+            carrying=jnp.zeros((1,)),
+            health=jnp.ones((1,)),
+        ),
+        nest=jnp.zeros(dims, dtype=bool).at[1, 1].set(True),
+        signals=jnp.zeros((2, *dims)),
+    )
+
+    colonies = merge_colonies([colony_a, colony_b])
+
+    assert isinstance(colonies, Colonies)
+
+    expected_pos = jnp.array([[0, 0], [0, 1], [1, 1]])
+    assert jnp.array_equal(colonies.ants.pos, expected_pos)
+    assert colonies.ants.carrying.shape == (3,)
+    assert colonies.ants.health.shape == (3,)
+    expected_nests = jnp.array([[1, 0], [0, 2]])
+    assert jnp.array_equal(colonies.nests, expected_nests)
+    assert colonies.signals.shape == (2, 2, *dims)
+    expected_idxs = jnp.array([0, 0, 1])
+    assert jnp.array_equal(colonies.colony_idx, expected_idxs)

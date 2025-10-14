@@ -48,9 +48,9 @@ def observations_from_state(
         return arr.at[i, :, x[:, 0], x[:, 1]].get()
 
     def get_nest(i: int, arr: chex.Array, x: chex.Array) -> chex.Array:
-        return arr.at[i, x[:, 0], x[:, 1]].get()
+        return arr.at[x[:, 0], x[:, 1]].get() == (i + 1)
 
-    occupation = jnp.zeros(state.colonies.nests.shape, dtype=float)
+    occupation = jnp.zeros((n_colonies, *dims), dtype=float)
     occupation = occupation.at[
         state.colonies.colony_idx,
         state.colonies.ants.pos[:, 0],

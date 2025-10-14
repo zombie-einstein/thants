@@ -12,9 +12,18 @@ else:
 
 @dataclass
 class Colonies:
+    """
+    Joint state of multiple colonies
+
+    ants: State of all ants
+    colony_idx: Idx assigning each ant to a colony
+    signals: Signals states for each colony
+    nests: Nest of indices indicating if a cell is a nest of a colony
+    """
+
     ants: Ants
     colony_idx: chex.Array  # [n-ants,]
-    signals: chex.Array  # [n-channels, *env-size]
+    signals: chex.Array  # [n-colonies, n-channels, *env-size]
     nests: chex.Array  # [*env-size]
 
 

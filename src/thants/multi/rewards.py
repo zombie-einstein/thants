@@ -25,6 +25,8 @@ class RewardFn(abc.ABC):
 
         Parameters
         ----------
+        colony_sizes
+            List of colony sizes (i.e. number of ants in each colony)
         old_state
             State at the start of the step
         new_state
@@ -46,6 +48,8 @@ class NullRewardFn(RewardFn):
 
         Parameters
         ----------
+        colony_sizes
+            List of colony sizes (i.e. number of ants in each colony)
         old_state
             State at the start of the step
         new_state
@@ -68,6 +72,8 @@ class DeliveredFoodRewards(RewardFn):
 
         Parameters
         ----------
+        colony_sizes
+            List of colony sizes (i.e. number of ants in each colony)
         old_state
             State at the start of the step
         new_state
