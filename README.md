@@ -35,7 +35,7 @@ pip install thants
 #### Single Colony
 
 ```python
-from thants.mono import ThantsMonoColony
+from thants.envs import ThantsMonoColony
 import jax
 
 env = ThantsMonoColony(dims=(50, 50))
@@ -57,10 +57,10 @@ env.animate(state_history, 100, "mono_colony.gif")
 #### Multi-Colony
 
 In the multi-colony case each colony is treated independently (and can be
-different sizes), so actions and observations are list of arrays/structs.
+different sizes), so actions and observations are list/tuples of arrays/structs.
 
 ```python
-from thants.multi import ThantsMultiColony
+from thants.envs import ThantsMultiColony
 import jax
 import jax.numpy as jnp
 
@@ -101,23 +101,25 @@ in the same colony.
 
 #### Colonies
 
-The state of each individual colony has the following components:
+The state of the ant colonies is represented by a single struct:
 
-- *Ants*: Individual ants in the colony have several components:
+- *Ants*: Individual ants themselves have several components:
     - *Positions*: 2d indices of ant positions on the environment grid.
     - *Carrying*: The amount of food being carried by each ant.
     - *Health*: Ant health (currently unused).
-- *Nest*: 2d array indicating if a cell is designated as a nest for this colony.
-- *Signals*: 3d array of signal deposits at each cell. Signals have multiple channels
-  to facilitate communication between ants (i.e. the first dimension of the array
-  is the signal channel).
+- *Colony Index*: The index of the colony each ant belongs to
+- *Nests*: 2d array indicating the index of the colony each cell belongs to
+  (`0` in the case a cell is not the nest of any colony).
+- *Signals*: 4d array of signal deposits at each cell for each colony. Signals have
+  multiple channels to facilitate communication between ants (i.e. the 2nd dimension
+  of the array is the signal channel).
 
 #### Environment
 
-The state of the environment then consists of the colony/colonies and state shared
+The state of the environment then consists of the colonies and state shared
 by all the colonies
 
-- *Colony/Colonies*: Colony or list of colony states
+- *Colonies*: Ant colonies state
 - *Food*: 2d array representing the amount of food deposited at each cell
 - *Terrain*: Array of flags indicating if a cell can be occupied by an ant. This
   allows obstacles to be placed on the environment.
@@ -136,10 +138,10 @@ Each step of the environment performs the following update to the state:
   by the colony)
 
 The behaviour of the dynamics of signals can be customised by implementing the
-`thants.common.signals.SignalPropagator` base class and passing it when initialising
-the environment.
+[`thants.signals.SignalPropagator`](src/thants/signals.py) base class and
+passing it when initialising the environment.
 
-#### Generators
+#### State Generators
 
 The initialisation of the environment can be customised by implementing the
 relevant base class and passing them to the environment.
@@ -165,18 +167,17 @@ individually made for the local neighbourhood of each ant, i.e. the 8 surroundin
 cells on the environment grid, and their own cell:
 
 - `ants`: Flag indicating if a cell in the neighbourhood is occupied by an ant,
-  for the single colony environment this has shape `[n-ants, 9]`, but in the multi-colony
-  case this is `[n-ants, n-colonies, 9]` where the second dimensions indicates the
-  individual colonies.
+  with the shape `[n-ants, n-colonies, 9]` where the second dimensions indicates the
+  individual colonies. The ants from the same colony will always be on the first row.
 - `signals`: Signal deposits in the neighbourhood (across all channels), signals are
   observed individually for each colony.
 - `food`: Food deposits within the neighbourhood.
-- `nest`: Flag indicating if a neighbouring cell is designated as a nest.
+- `nest`: Flag indicating if a neighbouring cell is designated as a nest for the ants colony.
 - `terrain`: Flag indicating if a neighbouring cell can be occupied.
 - `carrying`: Amount of food currently being carried by each ant.
 
 ### Rewards
 
 By default, rewards are granted to ants when they deposit food on their colonies nest.
-Reward signals customised by implementing the respective base classes
-`thants.mono.rewards.RewardFn` or `thants.multi.rewards.RewardFn`.
+Reward signals can be customised by implementing the respective base classes
+[`thants.rewards.RewardFn`](src/thants/rewards.py).
