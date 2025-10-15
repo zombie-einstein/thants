@@ -11,7 +11,7 @@ from thants.types import Observations, State
 @pytest.fixture
 def env() -> ThantsMultiColony:
     dims = (50, 100)
-    colony_generator = BasicColoniesGenerator(64, 2, (5, 5))
+    colony_generator = BasicColoniesGenerator((64, 36), 2, (5, 5))
     food_generator = BasicFoodGenerator(
         (2, 2),
         50,

@@ -96,7 +96,7 @@ class ThantsMultiColony(Environment):
         self.signal_deposit_amount = signal_deposit_amount
         self.max_steps = max_steps
         self._colonies_generator = colonies_generator or BasicColoniesGenerator(
-            25, 2, (5, 5)
+            [25, 25], 2, (5, 5)
         )
         self._food_generator = food_generator or BasicFoodGenerator((5, 5), 100, 1.0)
         self._terrain_generator = terrain_generator or OpenTerrainGenerator()

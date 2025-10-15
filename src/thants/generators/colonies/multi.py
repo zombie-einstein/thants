@@ -88,7 +88,7 @@ class BasicColoniesGenerator(ColoniesGenerator):
     """
 
     def __init__(
-        self, n_agents: int, n_signals: int, nest_dims: tuple[int, int]
+        self, n_agents: tuple[int, int], n_signals: int, nest_dims: tuple[int, int]
     ) -> None:
         """
         Initialise a basic generator
@@ -103,7 +103,7 @@ class BasicColoniesGenerator(ColoniesGenerator):
             Rectangular nest dimensions
         """
         self.nest_dims = nest_dims
-        super().__init__([n_agents, n_agents], n_signals)
+        super().__init__(n_agents, n_signals)
 
     def __call__(self, dims: tuple[int, int], key: chex.PRNGKey) -> Sequence[Colony]:
         """

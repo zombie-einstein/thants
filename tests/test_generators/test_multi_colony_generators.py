@@ -6,7 +6,7 @@ from thants.types import Colony
 
 def test_colony_generator(key):
     dims = (50, 100)
-    generator = BasicColoniesGenerator(25, 2, (5, 5))
+    generator = BasicColoniesGenerator([25, 25], 2, (5, 5))
     colonies = generator(dims, key)
     assert isinstance(colonies, list)
     assert len(colonies) == 2
