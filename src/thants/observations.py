@@ -1,3 +1,5 @@
+from typing import Sequence
+
 import chex
 import jax
 import jax.numpy as jnp
@@ -7,8 +9,8 @@ from thants.types import Observations, State
 
 
 def observations_from_state(
-    colony_sizes: list[int], state: State
-) -> list[Observations]:
+    colony_sizes: Sequence[int], state: State
+) -> Sequence[Observations]:
     """
     Generate individual agent observations from state for each colony
 
@@ -21,7 +23,7 @@ def observations_from_state(
 
     Returns
     -------
-    list[Observations]
+    Sequence[Observations]
         List of structs containing observation components for each colony
 
         - Local neighbourhood with flags indicating neighbouring ants
@@ -73,7 +75,7 @@ def observations_from_state(
         float
     )
 
-    boundaries = [0] + colony_sizes
+    boundaries = [0, *colony_sizes]
     boundaries = np.array(boundaries)
     boundaries = np.cumsum(boundaries)
 

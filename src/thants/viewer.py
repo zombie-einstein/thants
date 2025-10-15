@@ -196,7 +196,7 @@ class ThantsMultiColonyViewer(MatplotlibViewer[State]):
     def _draw(
         self, ax: plt.Axes, state: State
     ) -> tuple[ColorScheme, AxesImage, AxesImage]:
-        colors = get_color_scheme(self.color_sequence, len(state.colonies))
+        colors = get_color_scheme(self.color_sequence, state.colonies.signals.shape[0])
 
         terrain, nests, food = _draw_env(state, colors)
         ants = _draw_ants(state, colors)

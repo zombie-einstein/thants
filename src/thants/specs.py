@@ -23,6 +23,8 @@ def get_observation_spec(
         Number of signal channels
     carry_capacity
         Ant carrying capacity
+    num_colonies
+        Optional in the case of a multi-colony environment
 
     Returns
     -------

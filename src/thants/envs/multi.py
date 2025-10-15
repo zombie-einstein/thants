@@ -1,5 +1,5 @@
 from functools import cached_property, partial
-from typing import Optional, Sequence, Tuple
+from typing import Optional, Sequence
 
 import chex
 import jax
@@ -107,7 +107,9 @@ class ThantsMultiColony(Environment):
         self._viewer = viewer or ThantsMultiColonyViewer()
         super().__init__()
 
-    def reset(self, key: chex.PRNGKey) -> Tuple[State, list[TimeStep[Observations]]]:
+    def reset(
+        self, key: chex.PRNGKey
+    ) -> tuple[State, Sequence[TimeStep[Observations]]]:
         """
         Reset the environment state
 
@@ -118,8 +120,9 @@ class ThantsMultiColony(Environment):
 
         Returns
         -------
-        tuple[State, TimeStep]
-            Tuple containing new environment state, and initial timestep
+        tuple[State, Sequence[TimeStep]]
+            Tuple containing new environment state, and initial timesteps
+            for each colony
         """
         key, colony_key, food_key, terrain_key = jax.random.split(key, num=4)
         colonies = self._colonies_generator(self.dims, colony_key)
@@ -141,8 +144,8 @@ class ThantsMultiColony(Environment):
         return state, time_steps
 
     def step(
-        self, state: State, actions: list[chex.Array]
-    ) -> Tuple[State, list[TimeStep[Observations]]]:
+        self, state: State, actions: Sequence[chex.Array]
+    ) -> tuple[State, Sequence[TimeStep[Observations]]]:
         """
         Update the state of the environment
 
@@ -236,7 +239,7 @@ class ThantsMultiColony(Environment):
         return new_state, timestep
 
     @cached_property
-    def num_agents(self) -> list[int]:
+    def num_agents(self) -> Sequence[int]:
         return self._colonies_generator.n_agents
 
     @cached_property
@@ -248,7 +251,7 @@ class ThantsMultiColony(Environment):
         return 7 + self._colonies_generator.n_signals
 
     @cached_property
-    def observation_spec(self) -> list[specs.Spec[Observations]]:
+    def observation_spec(self) -> Sequence[specs.Spec[Observations]]:
         """
         List of observation specifications for each colony
 
@@ -262,7 +265,8 @@ class ThantsMultiColony(Environment):
 
         Returns
         -------
-        list[ObservationSpec]
+        Sequence[ObservationSpec]
+            Sequence of observation specs for each colony
         """
         return [
             get_observation_spec(
@@ -275,7 +279,7 @@ class ThantsMultiColony(Environment):
         ]
 
     @cached_property
-    def action_spec(self) -> list[specs.BoundedArray]:
+    def action_spec(self) -> Sequence[specs.BoundedArray]:
         """
         List of action specifications for each colony
 
@@ -284,7 +288,7 @@ class ThantsMultiColony(Environment):
 
         Returns
         -------
-        list[ActionSpec]
+        Sequence[ActionSpec]
         """
         return [
             get_action_spec(n, self._colonies_generator.n_signals)
@@ -292,7 +296,7 @@ class ThantsMultiColony(Environment):
         ]
 
     @cached_property
-    def reward_spec(self) -> list[specs.Array]:
+    def reward_spec(self) -> Sequence[specs.Array]:
         """
         List of reward specifications for each colony
 
@@ -300,7 +304,7 @@ class ThantsMultiColony(Environment):
 
         Returns
         -------
-        list[RewardSpec]
+        Sequence[RewardSpec]
         """
         return [get_reward_spec(n) for n in self.num_agents]
 

@@ -1,5 +1,5 @@
 import abc
-from typing import Optional
+from typing import Optional, Sequence
 
 import chex
 import jax.numpy as jnp
@@ -48,8 +48,8 @@ def delivered_food(
     return rewards
 
 
-def _get_boundaries(colony_sizes: list[int]) -> np.typing.NDArray:
-    boundaries = [0] + colony_sizes
+def _get_boundaries(colony_sizes: Sequence[int]) -> np.typing.NDArray:
+    boundaries = [0, *colony_sizes]
     boundaries = np.array(boundaries)
     boundaries = np.cumsum(boundaries)
     return boundaries
@@ -58,8 +58,8 @@ def _get_boundaries(colony_sizes: list[int]) -> np.typing.NDArray:
 class RewardFn(abc.ABC):
     @abc.abstractmethod
     def __call__(
-        self, colony_sizes: list[int], old_state: State, new_state: State
-    ) -> list[chex.Array]:
+        self, colony_sizes: Sequence[int], old_state: State, new_state: State
+    ) -> Sequence[chex.Array]:
         """
         Generate individual ant rewards for each colony
 
@@ -81,8 +81,8 @@ class RewardFn(abc.ABC):
 
 class NullRewardFn(RewardFn):
     def __call__(
-        self, colony_sizes: list[int], old_state: State, new_state: State
-    ) -> list[chex.Array]:
+        self, colony_sizes: Sequence[int], old_state: State, new_state: State
+    ) -> Sequence[chex.Array]:
         """
         Assigns 0 reward to all agents
 
@@ -97,7 +97,7 @@ class NullRewardFn(RewardFn):
 
         Returns
         -------
-        list[chex.Array]
+        Sequence[chex.Array]
             List of rewards arrays per colony
         """
         return [jnp.zeros(n) for n in colony_sizes]
@@ -105,8 +105,8 @@ class NullRewardFn(RewardFn):
 
 class DeliveredFoodRewards(RewardFn):
     def __call__(
-        self, colony_sizes: list[int], old_state: State, new_state: State
-    ) -> list[chex.Array]:
+        self, colony_sizes: Sequence[int], old_state: State, new_state: State
+    ) -> Sequence[chex.Array]:
         """
         Assigns rewards for ants depositing food on their own nest
 
@@ -121,7 +121,7 @@ class DeliveredFoodRewards(RewardFn):
 
         Returns
         -------
-        list[chex.Array]
+        Sequence[chex.Array]
             List of rewards arrays per colony
         """
         boundaries = _get_boundaries(colony_sizes)

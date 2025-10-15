@@ -1,3 +1,5 @@
+from typing import Sequence
+
 import chex
 import jax.numpy as jnp
 
@@ -102,7 +104,7 @@ def clear_nest(nests: chex.Array, food: chex.Array) -> chex.Array:
     return jnp.where(nests > 0, 0.0, food)
 
 
-def merge_colonies(colonies: list[Colony]) -> Colonies:
+def merge_colonies(colonies: Sequence[Colony]) -> Colonies:
     """
     Merge a list of colonies into a single state
 
