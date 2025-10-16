@@ -3,7 +3,7 @@ import jax.random
 import pytest
 
 from thants.envs.multi import ThantsMultiColony
-from thants.generators.colonies.multi import BasicColoniesGenerator
+from thants.generators.colonies.multi import DualBasicColoniesGenerator
 from thants.generators.food import BasicFoodGenerator
 from thants.types import Observations, State
 
@@ -11,7 +11,7 @@ from thants.types import Observations, State
 @pytest.fixture
 def env() -> ThantsMultiColony:
     dims = (50, 100)
-    colony_generator = BasicColoniesGenerator((64, 36), 2, (5, 5))
+    colony_generator = DualBasicColoniesGenerator((64, 36), 2, (5, 5))
     food_generator = BasicFoodGenerator(
         (2, 2),
         50,

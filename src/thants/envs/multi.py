@@ -11,8 +11,8 @@ from matplotlib.animation import FuncAnimation
 
 from thants.actions import derive_actions
 from thants.generators.colonies.multi import (
-    BasicColoniesGenerator,
     ColoniesGenerator,
+    DualBasicColoniesGenerator,
 )
 from thants.generators.food import BasicFoodGenerator, FoodGenerator
 from thants.generators.terrain import OpenTerrainGenerator, TerrainGenerator
@@ -95,7 +95,7 @@ class ThantsMultiColony(Environment):
         self.deposit_food_amount = deposit_food_amount
         self.signal_deposit_amount = signal_deposit_amount
         self.max_steps = max_steps
-        self._colonies_generator = colonies_generator or BasicColoniesGenerator(
+        self._colonies_generator = colonies_generator or DualBasicColoniesGenerator(
             [25, 25], 2, (5, 5)
         )
         self._food_generator = food_generator or BasicFoodGenerator((5, 5), 100, 1.0)

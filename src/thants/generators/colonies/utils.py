@@ -1,4 +1,6 @@
 import math
+from dataclasses import dataclass
+from typing import Sequence
 
 import chex
 import jax.numpy as jnp
@@ -25,10 +27,17 @@ def get_rectangular_indices(rec_dims: tuple[int, int]) -> chex.Array:
     return idxs
 
 
+@dataclass
+class BBox:
+    """Rectangular region bounding box"""
+
+    x0: tuple[int, int]
+    x1: tuple[int, int]
+
+
 def init_colony(
     dims: tuple[int, int],
-    x0: tuple[int, int],
-    x1: tuple[int, int],
+    bounds: BBox,
     nest_dims: tuple[int, int],
     n_agents: int,
     n_signals: int,
@@ -40,10 +49,8 @@ def init_colony(
     ----------
     dims
         Environment dimensions
-    x0
-        Ids of the origin of the rectangular region
-    x1
-        Dimensions of the rectangular region
+    bounds
+        Bounding box of the rectangular region
     nest_dims
         Rectangular nest dimensions
     n_agents
@@ -56,8 +63,8 @@ def init_colony(
     Colony
         Initialised colony
     """
-    x0 = jnp.array(x0)
-    x1 = jnp.array(x1)
+    x0 = jnp.array(bounds.x0)
+    x1 = jnp.array(bounds.x1)
     dims = jnp.array(dims)
     centre = (x0 + ((x1 - x0) // 2))[jnp.newaxis]
     d = math.ceil(math.sqrt(n_agents))
@@ -79,3 +86,43 @@ def init_colony(
     signals = jnp.zeros((n_signals, *dims))
 
     return Colony(ants=ants, signals=signals, nest=nest)
+
+
+def init_colonies(
+    env_dims: tuple[int, int],
+    nest_dims: tuple[int, int],
+    n_agents: Sequence[BBox],
+    n_signals: int,
+    bounds: Sequence[BBox],
+) -> Sequence[Colony]:
+    """
+    Initialise multiple rectangular colonies
+
+    Parameters
+    ----------
+    env_dims
+        Environment dimensions
+    nest_dims
+        Rectangular nest dimensions
+    n_agents
+        Number of agents in each colony
+    n_signals
+        Number of signal channels
+    bounds
+        Bounding boxes of each colony
+
+    Returns
+    -------
+    Sequence[Colony]
+        List of initialised colonies
+    """
+    return [
+        init_colony(
+            env_dims,
+            b,
+            nest_dims,
+            n,
+            n_signals,
+        )
+        for b, n in zip(bounds, n_agents)
+    ]
