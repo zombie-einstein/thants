@@ -31,7 +31,7 @@ from thants.types import Ants, Colonies, Observations, State
 from thants.viewer import ThantsMultiColonyViewer
 
 
-class ThantsMultiColony(Environment):
+class Thants(Environment):
     """
     Thants environment with multiple colonies
     """

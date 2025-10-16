@@ -2,26 +2,26 @@ import chex
 import jax.random
 import pytest
 
-from thants.envs.multi import ThantsMultiColony
+from thants.envs.multi import Thants
 from thants.generators.colonies.multi import DualBasicColoniesGenerator
 from thants.generators.food import BasicFoodGenerator
 from thants.types import Observations, State
 
 
 @pytest.fixture
-def env() -> ThantsMultiColony:
+def env() -> Thants:
     dims = (50, 100)
     colony_generator = DualBasicColoniesGenerator((64, 36), 2, (5, 5))
     food_generator = BasicFoodGenerator(
         (2, 2),
         50,
     )
-    return ThantsMultiColony(
+    return Thants(
         dims=dims, colonies_generator=colony_generator, food_generator=food_generator
     )
 
 
-def test_env_does_not_smoke(key: chex.Array, env: ThantsMultiColony) -> None:
+def test_env_does_not_smoke(key: chex.Array, env: Thants) -> None:
     """Test that we can run an episode without any errors."""
     env.max_steps = 100
 
