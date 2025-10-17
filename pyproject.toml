@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "thants"
-version = "0.1.0"
+version = "0.2.0"
 description = "Ants! On your GPU! With JAX!"
 authors = ["zombie-einstein <zombie-einstein@proton.me>"]
 license = "MIT"
