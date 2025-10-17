@@ -142,6 +142,10 @@ class ThantsMono(Environment):
         return state, timestep[0]
 
     @cached_property
+    def dims(self) -> tuple[int, int]:
+        return self.env.dims
+
+    @cached_property
     def num_agents(self) -> int:
         return self.env.num_agents[0]
 
