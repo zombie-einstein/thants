@@ -2,7 +2,7 @@ import abc
 
 import chex
 
-from thants.generators.colonies.utils import init_colony
+from thants.generators.colonies.utils import BBox, init_colony
 from thants.types import Colony
 
 
@@ -94,6 +94,5 @@ class BasicColonyGenerator(ColonyGenerator):
         Colony
             Colony state containing ants, signals, and nest states
         """
-        return init_colony(
-            dims, (0, 0), dims, self.nest_dims, self.n_agents, self.n_signals
-        )
+        bounds = BBox(x0=(0, 0), x1=dims)
+        return init_colony(dims, bounds, self.nest_dims, self.n_agents, self.n_signals)

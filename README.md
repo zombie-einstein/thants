@@ -34,11 +34,15 @@ pip install thants
 
 #### Single Colony
 
+The single colony environment follows the [Jumanji](https://github.com/instadeepai/jumanji)
+environment API, with actions provided as an array of individual
+actions:
+
 ```python
-from thants.envs import ThantsMonoColony
+from thants.envs import ThantsMono
 import jax
 
-env = ThantsMonoColony(dims=(50, 50))
+env = ThantsMono(dims=(50, 50))
 key = jax.random.PRNGKey(101)
 state, obs = env.reset(key)
 state_history = [state]
@@ -57,15 +61,15 @@ env.animate(state_history, 100, "mono_colony.gif")
 #### Multi-Colony
 
 In the multi-colony case each colony is treated independently (and can be
-different sizes), so actions and observations are list/tuples of arrays/structs.
+different sizes), so actions, observations, timesteps are list/tuples of
+arrays/structs:
 
 ```python
-from thants.envs import ThantsMultiColony
+from thants.envs import Thants
 import jax
 import jax.numpy as jnp
 
-
-env = ThantsMultiColony((50, 100))
+env = Thants((50, 100))
 key = jax.random.PRNGKey(101)
 state, obs = env.reset(key)
 state_history = [state]
@@ -82,6 +86,9 @@ for _ in range(50):
 
 env.animate(state_history, 100, "multi_colony.gif")
 ```
+
+Preset simple environments can be imported from `thants.envs.ThantsDual` and
+`thants.envs.ThantsQuad` with 2 and 4 colonies respectively.
 
 ## Environment
 

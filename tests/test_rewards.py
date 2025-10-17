@@ -5,7 +5,7 @@ from thants.steps import merge_colonies
 from thants.types import Ants, Colony, State
 
 
-def test_delivered_food_rewards():
+def test_delivered_food_rewards() -> None:
     dims = (3, 1)
     nest = jnp.ones(dims, dtype=bool).at[0, 0].set(False)
     pos = jnp.array([[0, 0], [1, 0], [2, 0]])

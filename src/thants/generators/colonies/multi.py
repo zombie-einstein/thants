@@ -4,7 +4,7 @@ from typing import Sequence
 import chex
 
 from thants.generators.colonies.mono import ColonyGenerator
-from thants.generators.colonies.utils import init_colony
+from thants.generators.colonies.utils import BBox, init_colonies
 from thants.types import Colony
 
 
@@ -82,9 +82,9 @@ class SingleColonyWrapper(ColoniesGenerator):
         return [self.generator(dims, key)]
 
 
-class BasicColoniesGenerator(ColoniesGenerator):
+class DualBasicColoniesGenerator(ColoniesGenerator):
     """
-    Basic generator that create 2 evenly spaced colonies
+    Basic generator that create 2 evenly spaced rectangular colonies
     """
 
     def __init__(
@@ -122,21 +122,65 @@ class BasicColoniesGenerator(ColoniesGenerator):
             List of initialised colonies
         """
         mid = dims[1] // 2
-        return [
-            init_colony(
-                dims,
-                (0, 0),
-                (dims[0], mid),
-                self.nest_dims,
-                self.n_agents[0],
-                self.n_signals,
-            ),
-            init_colony(
-                dims,
-                (0, mid),
-                (dims[0], dims[1]),
-                self.nest_dims,
-                self.n_agents[1],
-                self.n_signals,
-            ),
+        bounds = [
+            BBox(x0=(0, 0), x1=(dims[0], mid)),
+            BBox(x0=(0, mid), x1=dims),
         ]
+        return init_colonies(
+            dims, self.nest_dims, self.n_agents, self.n_signals, bounds
+        )
+
+
+class QuadBasicColoniesGenerator(ColoniesGenerator):
+    """
+    Basic generator that create 4 evenly spaced rectangular colonies
+    """
+
+    def __init__(
+        self,
+        n_agents: tuple[int, int, int, int],
+        n_signals: int,
+        nest_dims: tuple[int, int],
+    ) -> None:
+        """
+        Initialise a basic generator
+
+        Parameters
+        ----------
+        n_agents
+            Number of agents in each colony
+        n_signals
+            Number of colony signal-channels
+        nest_dims
+            Rectangular nest dimensions
+        """
+        self.nest_dims = nest_dims
+        super().__init__(n_agents, n_signals)
+
+    def __call__(self, dims: tuple[int, int], key: chex.PRNGKey) -> Sequence[Colony]:
+        """
+        Initialise the pair of colonies
+
+        Parameters
+        ----------
+        dims
+            Dimensions of the environment
+        key
+            JAX random key
+
+        Returns
+        -------
+        Sequence[Colony]
+            List of initialised colonies
+        """
+
+        mid = (dims[0] // 2, dims[1] // 2)
+        bounds = [
+            BBox(x0=(0, 0), x1=mid),
+            BBox(x0=mid, x1=dims),
+            BBox(x0=(mid[0], 0), x1=(dims[0], mid[1])),
+            BBox(x0=(0, mid[1]), x1=(mid[0], dims[1])),
+        ]
+        return init_colonies(
+            dims, self.nest_dims, self.n_agents, self.n_signals, bounds
+        )

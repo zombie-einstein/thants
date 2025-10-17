@@ -7,7 +7,7 @@ from jumanji.types import TimeStep
 from jumanji.viewer import Viewer
 from matplotlib.animation import FuncAnimation
 
-from thants.envs.multi import ThantsMultiColony
+from thants.envs.multi import Thants
 from thants.generators.colonies.mono import (
     BasicColonyGenerator,
     ColonyGenerator,
@@ -20,7 +20,7 @@ from thants.signals import SignalPropagator
 from thants.types import Observations, State
 
 
-class ThantsMonoColony(Environment):
+class ThantsMono(Environment):
     """Environment with a single colony"""
 
     def __init__(
@@ -78,7 +78,7 @@ class ThantsMonoColony(Environment):
         """
         colony_generator = colony_generator or BasicColonyGenerator(25, 2, (5, 5))
         colony_generator = SingleColonyWrapper(colony_generator)
-        self.env = ThantsMultiColony(
+        self.env = Thants(
             dims=dims,
             colonies_generator=colony_generator,
             food_generator=food_generator,
@@ -140,6 +140,10 @@ class ThantsMonoColony(Environment):
         """
         state, timestep = self.env.step(state, [actions])
         return state, timestep[0]
+
+    @cached_property
+    def dims(self) -> tuple[int, int]:
+        return self.env.dims
 
     @cached_property
     def num_agents(self) -> int:
