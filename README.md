@@ -34,7 +34,7 @@ pip install thants
 
 #### Single Colony
 
-The single colony environment follow the [Jumanji](https://github.com/instadeepai/jumanji)
+The single colony environment follows the [Jumanji](https://github.com/instadeepai/jumanji)
 environment API, with actions provided as an array of individual
 actions:
 
