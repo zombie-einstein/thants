@@ -58,8 +58,8 @@ def get_color_scheme(color_sequence: str, n_colonies: int) -> ColorScheme:
         Environment visualisation color-scheme
     """
     colors = color_sequences[color_sequence]
-    colors = jnp.array([(*i, 1.0) for i in colors[: 3 + n_colonies]])
-    return ColorScheme(terrain=colors[:2], food=colors[2], ants=colors[3:])
+    colors_arr = jnp.array([(*i, 1.0) for i in colors[: 3 + n_colonies]])
+    return ColorScheme(terrain=colors_arr[:2], food=colors_arr[2], ants=colors_arr[3:])
 
 
 def _draw_env(
@@ -130,8 +130,9 @@ class ThantsMultiColonyViewer(MatplotlibViewer[State]):
             RGB array if the render_mode is ``rgb_array``
         """
         self._clear_display()
-        dims = state.food.shape
+        dims = (state.food.shape[0], state.food.shape[1])
         self._set_figure_size(dims)
+
         fig, ax = self._get_fig_ax(padding=0.01)
         ax.clear()
         fig, ax = format_plot(fig, ax, dims)
@@ -165,7 +166,7 @@ class ThantsMultiColonyViewer(MatplotlibViewer[State]):
         if not states:
             raise ValueError(f"The states argument has to be non-empty, got {states}.")
 
-        dims = states[0].food.shape
+        dims = (states[0].food.shape[0], states[0].food.shape[1])
         self._set_figure_size(dims)
 
         fig, ax = self._get_fig_ax(name_suffix="_animation", show=False, padding=0.01)

@@ -1,6 +1,7 @@
 import abc
 
 import chex
+import jax
 import jax.numpy as jnp
 
 
@@ -10,7 +11,7 @@ class TerrainGenerator(abc.ABC):
     """
 
     @abc.abstractmethod
-    def __call__(self, dims: tuple[int, int], key: chex.PRNGKey) -> chex.Array:
+    def __call__(self, dims: tuple[int, int], key: chex.PRNGKey) -> jax.Array:
         """
         Generate an array indicating passable/unpassable terrain
 
@@ -33,7 +34,7 @@ class OpenTerrainGenerator(TerrainGenerator):
     Generates completely open terrain
     """
 
-    def __call__(self, dims: tuple[int, int], key: chex.PRNGKey) -> chex.Array:
+    def __call__(self, dims: tuple[int, int], key: chex.PRNGKey) -> jax.Array:
         """
         Generate an array indicating passable/unpassable terrain
 
@@ -57,7 +58,7 @@ class BoundedTerrainGenerator(TerrainGenerator):
     Generate open terrain with an unpassable boundary
     """
 
-    def __call__(self, dims: tuple[int, int], key: chex.PRNGKey) -> chex.Array:
+    def __call__(self, dims: tuple[int, int], key: chex.PRNGKey) -> jax.Array:
         """
         Generate an array indicating passable/unpassable terrain
 

@@ -1,7 +1,7 @@
 import abc
 from typing import Optional, Sequence
 
-import chex
+import jax
 import jax.numpy as jnp
 import numpy as np
 
@@ -9,12 +9,12 @@ from thants.types import State
 
 
 def delivered_food(
-    nest: chex.Array,
-    pos: chex.Array,
-    carrying_before: chex.Array,
-    carrying_after: chex.Array,
-    colony_idxs: Optional[chex.Array] = None,
-) -> chex.Array:
+    nest: jax.Array,
+    pos: jax.Array,
+    carrying_before: jax.Array,
+    carrying_after: jax.Array,
+    colony_idxs: Optional[jax.Array] = None,
+) -> jax.Array:
     """
     Calculate food deposited by individual ant on a nest
 
@@ -49,9 +49,8 @@ def delivered_food(
 
 
 def _get_boundaries(colony_sizes: Sequence[int]) -> np.typing.NDArray:
-    boundaries = [0, *colony_sizes]
-    boundaries = np.array(boundaries)
-    boundaries = np.cumsum(boundaries)
+    colony_bounds = np.array([0, *colony_sizes])
+    boundaries = np.cumsum(colony_bounds)
     return boundaries
 
 
@@ -59,7 +58,7 @@ class RewardFn(abc.ABC):
     @abc.abstractmethod
     def __call__(
         self, colony_sizes: Sequence[int], old_state: State, new_state: State
-    ) -> Sequence[chex.Array]:
+    ) -> Sequence[jax.Array]:
         """
         Generate individual ant rewards for each colony
 
@@ -82,7 +81,7 @@ class RewardFn(abc.ABC):
 class NullRewardFn(RewardFn):
     def __call__(
         self, colony_sizes: Sequence[int], old_state: State, new_state: State
-    ) -> Sequence[chex.Array]:
+    ) -> Sequence[jax.Array]:
         """
         Assigns 0 reward to all agents
 
@@ -106,7 +105,7 @@ class NullRewardFn(RewardFn):
 class DeliveredFoodRewards(RewardFn):
     def __call__(
         self, colony_sizes: Sequence[int], old_state: State, new_state: State
-    ) -> Sequence[chex.Array]:
+    ) -> Sequence[jax.Array]:
         """
         Assigns rewards for ants depositing food on their own nest
 

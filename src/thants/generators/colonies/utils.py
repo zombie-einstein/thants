@@ -2,13 +2,13 @@ import math
 from dataclasses import dataclass
 from typing import Sequence
 
-import chex
+import jax
 import jax.numpy as jnp
 
 from thants.types import Ants, Colony
 
 
-def get_rectangular_indices(rec_dims: tuple[int, int]) -> chex.Array:
+def get_rectangular_indices(rec_dims: tuple[int, int]) -> jax.Array:
     """
     Get cell indices for a rectangle
 
@@ -65,12 +65,12 @@ def init_colony(
     """
     x0 = jnp.array(bounds.x0)
     x1 = jnp.array(bounds.x1)
-    dims = jnp.array(dims)
+    dims_arr = jnp.array(dims)
     centre = (x0 + ((x1 - x0) // 2))[jnp.newaxis]
     d = math.ceil(math.sqrt(n_agents))
     ant_pos = get_rectangular_indices((d, d))[:n_agents]
     ant_pos = ant_pos + centre - (jnp.array([[d, d]]) // 2)
-    ant_pos = ant_pos % dims
+    ant_pos = ant_pos % dims_arr
 
     ant_health = jnp.ones((n_agents,))
     ant_carrying = jnp.zeros((n_agents,))
@@ -79,11 +79,11 @@ def init_colony(
 
     nest_idxs = get_rectangular_indices(nest_dims)
     nest_idxs = nest_idxs + centre - jnp.array(nest_dims) // 2
-    nest_idxs = nest_idxs % dims
-    nest = jnp.zeros(dims, dtype=bool)
+    nest_idxs = nest_idxs % dims_arr
+    nest = jnp.zeros(dims_arr, dtype=bool)
     nest = nest.at[nest_idxs[:, 0], nest_idxs[:, 1]].set(True)
 
-    signals = jnp.zeros((n_signals, *dims))
+    signals = jnp.zeros((n_signals, *dims_arr))
 
     return Colony(ants=ants, signals=signals, nest=nest)
 
@@ -91,7 +91,7 @@ def init_colony(
 def init_colonies(
     env_dims: tuple[int, int],
     nest_dims: tuple[int, int],
-    n_agents: Sequence[BBox],
+    n_agents: Sequence[int],
     n_signals: int,
     bounds: Sequence[BBox],
 ) -> Sequence[Colony]:

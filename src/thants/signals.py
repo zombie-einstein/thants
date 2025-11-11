@@ -1,6 +1,7 @@
 import abc
 
 import chex
+import jax
 import jax.numpy as jnp
 
 
@@ -10,7 +11,7 @@ class SignalPropagator(abc.ABC):
     """
 
     @abc.abstractmethod
-    def __call__(self, key: chex.PRNGKey, signals: chex.Array) -> chex.Array:
+    def __call__(self, key: chex.PRNGKey, signals: jax.Array) -> jax.Array:
         """
         Generate updated signal state
 
@@ -53,7 +54,7 @@ class BasicSignalPropagator(SignalPropagator):
         self.dissipation_rate = dissipation_rate
         super().__init__()
 
-    def __call__(self, key: chex.PRNGKey, signals: chex.Array) -> chex.Array:
+    def __call__(self, key: chex.PRNGKey, signals: jax.Array) -> jax.Array:
         """
         Generate updated signal state
 

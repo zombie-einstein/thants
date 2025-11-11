@@ -40,16 +40,16 @@ def observations_from_state(
     idxs = jnp.indices((3, 3))
     idxs = idxs.swapaxes(0, 2).reshape(9, 2) - 1
 
-    def get_ant_view(arr: chex.Array, i: chex.Array, x: chex.Array) -> chex.Array:
+    def get_ant_view(arr: jax.Array, i: jax.Array, x: jax.Array) -> jax.Array:
         return arr.at[i[:, jnp.newaxis], x[:, 0], x[:, 1]].get()
 
-    def get_view(arr: chex.Array, x: chex.Array) -> chex.Array:
+    def get_view(arr: jax.Array, x: jax.Array) -> jax.Array:
         return arr.at[x[:, 0], x[:, 1]].get()
 
-    def get_signals(arr: chex.Array, i: int, x: chex.Array) -> chex.Array:
+    def get_signals(arr: jax.Array, i: jax.Array, x: jax.Array) -> jax.Array:
         return arr.at[i, jnp.arange(n_signals)[:, jnp.newaxis], x[:, 0], x[:, 1]].get()
 
-    def get_nest(i: int, arr: chex.Array, x: chex.Array) -> chex.Array:
+    def get_nest(i: chex.Numeric, arr: jax.Array, x: jax.Array) -> jax.Array:
         return arr.at[x[:, 0], x[:, 1]].get() == (i + 1)
 
     occupation = jnp.zeros((n_colonies, *dims), dtype=float)
@@ -75,9 +75,8 @@ def observations_from_state(
         float
     )
 
-    boundaries = [0, *colony_sizes]
-    boundaries = np.array(boundaries)
-    boundaries = np.cumsum(boundaries)
+    colony_bins = np.array([0, *colony_sizes])
+    boundaries = np.cumsum(colony_bins)
 
     observations = [
         Observations(

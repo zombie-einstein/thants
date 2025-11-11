@@ -96,7 +96,7 @@ class Thants(Environment):
         self.signal_deposit_amount = signal_deposit_amount
         self.max_steps = max_steps
         self._colonies_generator = colonies_generator or DualBasicColoniesGenerator(
-            [25, 25], 2, (5, 5)
+            (25, 25), 2, (5, 5)
         )
         self._food_generator = food_generator or BasicFoodGenerator((5, 5), 100, 1.0)
         self._terrain_generator = terrain_generator or OpenTerrainGenerator()
@@ -107,7 +107,7 @@ class Thants(Environment):
         self._viewer = viewer or ThantsMultiColonyViewer()
         super().__init__()
 
-    def reset(
+    def reset(  # type: ignore[override]
         self, key: chex.PRNGKey
     ) -> tuple[State, Sequence[TimeStep[Observations]]]:
         """
@@ -126,13 +126,13 @@ class Thants(Environment):
         """
         key, colony_key, food_key, terrain_key = jax.random.split(key, num=4)
         colonies = self._colonies_generator(self.dims, colony_key)
-        colonies = merge_colonies(colonies)
+        merged_colonies = merge_colonies(colonies)
         food = self._food_generator.init(self.dims, food_key)
         terrain = self._terrain_generator(self.dims, terrain_key)
         state = State(
             step=0,
             key=key,
-            colonies=colonies,
+            colonies=merged_colonies,
             food=food,
             terrain=terrain,
         )
@@ -143,8 +143,8 @@ class Thants(Environment):
         ]
         return state, time_steps
 
-    def step(
-        self, state: State, actions: Sequence[chex.Array]
+    def step(  # type: ignore[override]
+        self, state: State, actions: Sequence[jax.Array]
     ) -> tuple[State, Sequence[TimeStep[Observations]]]:
         """
         Update the state of the environment
@@ -171,10 +171,10 @@ class Thants(Environment):
             Tuple containing new state and list of TimeSteps for each colony
         """
         key, food_key, signals_key = jax.random.split(state.key, num=3)
-        actions = jnp.concatenate(actions, axis=0)
+        all_actions = jnp.concatenate(actions, axis=0)
         # Unwrap actions
-        actions = derive_actions(
-            actions,
+        unwrapped_actions = derive_actions(
+            all_actions,
             take_food_amount=self.take_food_amount,
             deposit_food_amount=self.deposit_food_amount,
             signal_deposit_amount=self.signal_deposit_amount,
@@ -185,14 +185,14 @@ class Thants(Environment):
             self.dims,
             state.colonies.ants.pos,
             state.terrain,
-            actions.movements,
+            unwrapped_actions.movements,
         )
         # Pick up and drop-off food for each colony
         new_food, new_carrying = update_food(
             state.food,
             new_pos,
-            actions.take_food,
-            actions.deposit_food,
+            unwrapped_actions.take_food,
+            unwrapped_actions.deposit_food,
             state.colonies.ants.carrying,
             self.carry_capacity,
         )
@@ -202,7 +202,10 @@ class Thants(Environment):
         new_signals = self._signal_dynamics(signals_key, state.colonies.signals)
         # Deposit signals
         new_signals = deposit_signals(
-            new_signals, new_pos, state.colonies.colony_idx, actions.deposit_signals
+            new_signals,
+            new_pos,
+            state.colonies.colony_idx,
+            unwrapped_actions.deposit_signals,
         )
         # Clear food dropped on nests
         new_food = clear_nest(state.colonies.nests, new_food)
@@ -251,7 +254,9 @@ class Thants(Environment):
         return 7 + self._colonies_generator.n_signals
 
     @cached_property
-    def observation_spec(self) -> Sequence[specs.Spec[Observations]]:
+    def observation_spec(  # type: ignore[override]
+        self,
+    ) -> Sequence[specs.Spec[Observations]]:
         """
         List of observation specifications for each colony
 
@@ -296,7 +301,7 @@ class Thants(Environment):
         ]
 
     @cached_property
-    def reward_spec(self) -> Sequence[specs.Array]:
+    def reward_spec(self) -> Sequence[specs.Array]:  # type: ignore[override]
         """
         List of reward specifications for each colony
 
