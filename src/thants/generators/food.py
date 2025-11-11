@@ -13,7 +13,7 @@ class FoodGenerator(abc.ABC):
     """
 
     @abc.abstractmethod
-    def init(self, dims: tuple[int, int], key: chex.PRNGKey) -> chex.Array:
+    def init(self, dims: tuple[int, int], key: chex.PRNGKey) -> jax.Array:
         """
         Initialise environment food state
 
@@ -31,7 +31,7 @@ class FoodGenerator(abc.ABC):
         """
 
     @abc.abstractmethod
-    def update(self, key: chex.PRNGKey, step: int, food: chex.Array) -> chex.Array:
+    def update(self, key: chex.PRNGKey, step: int, food: jax.Array) -> jax.Array:
         """
         Update food state during simulation, e.g. drop more food
 
@@ -80,7 +80,7 @@ class BasicFoodGenerator(FoodGenerator):
         self.drop_interval = drop_interval
         self.drop_amount = drop_amount
 
-    def _drop_food(self, key: chex.PRNGKey, food: chex.Array) -> chex.Array:
+    def _drop_food(self, key: chex.PRNGKey, food: jax.Array) -> jax.Array:
         """
         Place a new fixed size block of at a random location
 
@@ -104,7 +104,7 @@ class BasicFoodGenerator(FoodGenerator):
         food = food.at[food_idxs[:, 0], food_idxs[:, 1]].add(self.drop_amount)
         return food
 
-    def init(self, dims: tuple[int, int], key: chex.PRNGKey) -> chex.Array:
+    def init(self, dims: tuple[int, int], key: chex.PRNGKey) -> jax.Array:
         """
         Initialise environment food state
 
@@ -126,7 +126,7 @@ class BasicFoodGenerator(FoodGenerator):
         food = self._drop_food(key, food)
         return food
 
-    def update(self, key: chex.PRNGKey, step: int, food: chex.Array) -> chex.Array:
+    def update(self, key: chex.PRNGKey, step: int, food: jax.Array) -> jax.Array:
         """
         Drop rectangular blocks of food at random locations at fixed intervals
 

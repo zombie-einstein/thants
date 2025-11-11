@@ -1,19 +1,19 @@
 from typing import Sequence
 
-import chex
+import jax
 import jax.numpy as jnp
 
 from thants.types import Ants, Colonies, Colony, SignalActions
 
 
 def update_food(
-    food: chex.Array,
-    pos: chex.Array,
-    take: chex.Array,
-    deposit: chex.Array,
-    carrying: chex.Array,
+    food: jax.Array,
+    pos: jax.Array,
+    take: jax.Array,
+    deposit: jax.Array,
+    carrying: jax.Array,
     capacity: float,
-) -> tuple[chex.Array, chex.Array]:
+) -> tuple[jax.Array, jax.Array]:
     """
     Update food piles due to ant actions
 
@@ -51,8 +51,8 @@ def update_food(
 
 
 def update_positions(
-    dims: tuple[int, int], pos: chex.Array, terrain: chex.Array, updates: chex.Array
-) -> chex.Array:
+    dims: tuple[int, int], pos: jax.Array, terrain: jax.Array, updates: jax.Array
+) -> jax.Array:
     """
     Update agent positions, checking for collisions
 
@@ -85,7 +85,7 @@ def update_positions(
     return new_pos
 
 
-def clear_nest(nests: chex.Array, food: chex.Array) -> chex.Array:
+def clear_nest(nests: jax.Array, food: jax.Array) -> jax.Array:
     """
     Clear food deposited on each colony nest
 
@@ -146,11 +146,11 @@ def merge_colonies(colonies: Sequence[Colony]) -> Colonies:
 
 
 def deposit_signals(
-    signals: chex.Array,
-    pos: chex.Array,
-    colony_idx: chex.Array,
+    signals: jax.Array,
+    pos: jax.Array,
+    colony_idx: jax.Array,
     deposits: SignalActions,
-) -> chex.Array:
+) -> jax.Array:
     """
     Deposit signals for the relevant colony and channel
 

@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 import chex
+import jax
 
 if TYPE_CHECKING:
     from dataclasses import dataclass
@@ -18,16 +19,16 @@ class Ants:
     carrying: Amount of food being carried by ants
     """
 
-    pos: chex.Array  # (n_ants, 2)
-    health: chex.Array  # (n_ants,)
-    carrying: chex.Array  # (n_ants,)
+    pos: jax.Array  # (n_ants, 2)
+    health: jax.Array  # (n_ants,)
+    carrying: jax.Array  # (n_ants,)
 
 
 @dataclass
 class Colony:
     ants: Ants
-    signals: chex.Array  # [n-channels, *env-size]
-    nest: chex.Array  # [*env-size]
+    signals: jax.Array  # [n-channels, *env-size]
+    nest: jax.Array  # [*env-size]
 
 
 @dataclass
@@ -42,9 +43,9 @@ class Colonies:
     """
 
     ants: Ants
-    colony_idx: chex.Array  # [n-ants,]
-    signals: chex.Array  # [n-colonies, n-channels, *env-size]
-    nests: chex.Array  # [*env-size]
+    colony_idx: jax.Array  # [n-ants,]
+    signals: jax.Array  # [n-colonies, n-channels, *env-size]
+    nests: jax.Array  # [*env-size]
 
 
 @dataclass
@@ -62,8 +63,8 @@ class State:
     step: int
     key: chex.PRNGKey
     colonies: Colonies
-    food: chex.Array  # [*env-size]
-    terrain: chex.Array  # [*env-size]
+    food: jax.Array  # [*env-size]
+    terrain: jax.Array  # [*env-size]
 
 
 @dataclass
@@ -75,8 +76,8 @@ class SignalActions:
     amount: Amount to deposit
     """
 
-    channel: chex.Array  # (n_ants,)
-    amount: chex.Array  # (n_ants,)
+    channel: jax.Array  # (n_ants,)
+    amount: jax.Array  # (n_ants,)
 
 
 @dataclass
@@ -90,9 +91,9 @@ class Actions:
     deposit_signals: Signal deposit channels and amounts
     """
 
-    movements: chex.Array  # (n_ants, 2)
-    take_food: chex.Array  # (n_ants,)
-    deposit_food: chex.Array  # (n_ants,)
+    movements: jax.Array  # (n_ants, 2)
+    take_food: jax.Array  # (n_ants,)
+    deposit_food: jax.Array  # (n_ants,)
     deposit_signals: SignalActions
 
 
@@ -109,12 +110,12 @@ class Observations:
     carrying: Food amount being held
     """
 
-    ants: chex.Array  # (n_ants, 9)
-    food: chex.Array  # (n_ants, 9)
-    signals: chex.Array  # (n_ants, n-channels, 9)
-    nest: chex.Array  # (n_ants, 9)
-    terrain: chex.Array  # (n_ants, 9)
-    carrying: chex.Array  # (n_ants,)
+    ants: jax.Array  # (n_ants, 9)
+    food: jax.Array  # (n_ants, 9)
+    signals: jax.Array  # (n_ants, n-channels, 9)
+    nest: jax.Array  # (n_ants, 9)
+    terrain: jax.Array  # (n_ants, 9)
+    carrying: jax.Array  # (n_ants,)
 
 
 @dataclass
@@ -127,6 +128,6 @@ class ColorScheme:
     terrain: Array of blocked/passable terrain cells
     """
 
-    ants: chex.Array  # (n-colonies, 4)
-    food: chex.Array  # (4,)
-    terrain: chex.Array  # (2, 4)
+    ants: jax.Array  # (n-colonies, 4)
+    food: jax.Array  # (4,)
+    terrain: jax.Array  # (2, 4)

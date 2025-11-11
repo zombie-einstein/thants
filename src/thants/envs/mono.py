@@ -2,6 +2,7 @@ from functools import cached_property
 from typing import Optional, Sequence
 
 import chex
+import jax
 from jumanji import Environment, specs
 from jumanji.types import TimeStep
 from jumanji.viewer import Viewer
@@ -77,10 +78,10 @@ class ThantsMono(Environment):
             Amount of signal deposited by the deposit signal action
         """
         colony_generator = colony_generator or BasicColonyGenerator(25, 2, (5, 5))
-        colony_generator = SingleColonyWrapper(colony_generator)
+        wrapped_colony_generator = SingleColonyWrapper(colony_generator)
         self.env = Thants(
             dims=dims,
-            colonies_generator=colony_generator,
+            colonies_generator=wrapped_colony_generator,
             food_generator=food_generator,
             terrain_generator=terrain_generator,
             signal_dynamics=signal_dynamics,
@@ -111,8 +112,8 @@ class ThantsMono(Environment):
         state, timestep = self.env.reset(key)
         return state, timestep[0]
 
-    def step(
-        self, state: State, actions: chex.Array
+    def step(  # type: ignore[override]
+        self, state: State, actions: jax.Array
     ) -> tuple[State, TimeStep[Observations]]:
         """
         Update the state of the environment
