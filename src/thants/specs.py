@@ -95,7 +95,7 @@ def get_observation_spec(
     )
 
 
-def get_action_spec(num_agents: int, num_signals: int) -> specs.BoundedArray:
+def get_action_spec(num_agents: int, num_signals: int) -> specs.MultiDiscreteArray:
     """
     Get action specification for a colony
 
@@ -111,10 +111,9 @@ def get_action_spec(num_agents: int, num_signals: int) -> specs.BoundedArray:
     Spec
         Action specification
     """
-    return specs.BoundedArray(
-        shape=(num_agents,),
-        minimum=0,
-        maximum=7 + num_signals,
+    n_actions = 7 + num_signals
+    return specs.MultiDiscreteArray(
+        num_values=jnp.full((num_agents,), n_actions, dtype=int),
         dtype=int,
     )
 
