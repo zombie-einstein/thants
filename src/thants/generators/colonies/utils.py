@@ -80,10 +80,10 @@ def init_colony(
     nest_idxs = get_rectangular_indices(nest_dims)
     nest_idxs = nest_idxs + centre - jnp.array(nest_dims) // 2
     nest_idxs = nest_idxs % dims_arr
-    nest = jnp.zeros(dims_arr, dtype=bool)
+    nest = jnp.zeros(dims, dtype=bool)
     nest = nest.at[nest_idxs[:, 0], nest_idxs[:, 1]].set(True)
 
-    signals = jnp.zeros((n_signals, *dims_arr))
+    signals = jnp.zeros((n_signals, *dims))
 
     return Colony(ants=ants, signals=signals, nest=nest)
 
