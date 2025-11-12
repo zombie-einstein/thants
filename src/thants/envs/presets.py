@@ -24,6 +24,7 @@ class ThantsDual(Thants):
         take_food_amount: float = 0.1,
         deposit_food_amount: float = 0.1,
         signal_deposit_amount: float = 0.1,
+        view_distance: int = 1,
     ) -> None:
         """
         Initialise the environment
@@ -52,6 +53,8 @@ class ThantsDual(Thants):
             Max food that can be dropped by an ant in a single step
         signal_deposit_amount
             Amount of signal deposited in a single step
+        view_distance
+            Number of cells away from an agent observed by each agent
         """
         food_generator = BasicFoodGenerator(food_drop_dims, food_drop_interval)
         super().__init__(
@@ -65,6 +68,7 @@ class ThantsDual(Thants):
             take_food_amount=take_food_amount,
             deposit_food_amount=deposit_food_amount,
             signal_deposit_amount=signal_deposit_amount,
+            view_distance=view_distance,
         )
 
 
@@ -86,6 +90,7 @@ class ThantsQuad(Thants):
         take_food_amount: float = 0.1,
         deposit_food_amount: float = 0.1,
         signal_deposit_amount: float = 0.1,
+        view_distance: int = 1,
     ) -> None:
         """
         Initialise the environment
@@ -114,6 +119,8 @@ class ThantsQuad(Thants):
             Max food that can be dropped by an ant in a single step
         signal_deposit_amount
             Amount of signal deposited in a single step
+        view_distance
+            Number of cells away from an agent observed by each agent
         """
         food_generator = BasicFoodGenerator(food_drop_dims, food_drop_interval)
         super().__init__(
@@ -129,4 +136,5 @@ class ThantsQuad(Thants):
             take_food_amount=take_food_amount,
             deposit_food_amount=deposit_food_amount,
             signal_deposit_amount=signal_deposit_amount,
+            view_distance=view_distance,
         )
