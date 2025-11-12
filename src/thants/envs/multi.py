@@ -50,6 +50,7 @@ class Thants(Environment):
         take_food_amount: float = 0.1,
         deposit_food_amount: float = 0.1,
         signal_deposit_amount: float = 0.1,
+        view_distance: int = 1,
     ) -> None:
         """
         Initialise the environment
@@ -88,6 +89,8 @@ class Thants(Environment):
             Amount of (attempted) food deposited by a deposit food action
         signal_deposit_amount
             Amount of signal deposited by the deposit signal action
+        view_distance
+            Number of cells away from an agent observed by each agent
         """
         self.dims = dims
         self.carry_capacity = carry_capacity
@@ -95,6 +98,8 @@ class Thants(Environment):
         self.deposit_food_amount = deposit_food_amount
         self.signal_deposit_amount = signal_deposit_amount
         self.max_steps = max_steps
+        assert view_distance > 0, "view_distance should be an integer greater than 0"
+        self.view_distance = view_distance
         self._colonies_generator = colonies_generator or DualBasicColoniesGenerator(
             (25, 25), 2, (5, 5)
         )
@@ -136,7 +141,9 @@ class Thants(Environment):
             food=food,
             terrain=terrain,
         )
-        observations = observations_from_state(self.num_agents, state)
+        observations = observations_from_state(
+            self.num_agents, state, view_distance=self.view_distance
+        )
         time_steps = [
             restart(observation=obs, shape=(n,))
             for obs, n in zip(observations, self._colonies_generator.n_agents)
@@ -228,7 +235,9 @@ class Thants(Environment):
         # Rewards
         rewards = self._reward_fn(self.num_agents, old_state=state, new_state=new_state)
         # Observations
-        observations = observations_from_state(self.num_agents, new_state)
+        observations = observations_from_state(
+            self.num_agents, new_state, view_distance=self.view_distance
+        )
         timestep = [
             jax.lax.cond(
                 state.step >= self.max_steps,
@@ -277,6 +286,7 @@ class Thants(Environment):
             get_observation_spec(
                 n,
                 self._colonies_generator.n_signals,
+                self.view_distance,
                 self.carry_capacity,
                 num_colonies=self.num_colonies,
             )

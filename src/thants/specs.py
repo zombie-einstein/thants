@@ -9,6 +9,7 @@ from thants.types import Observations
 def get_observation_spec(
     num_agents: int,
     num_signals: int,
+    view_distance: int,
     carry_capacity: float,
     num_colonies: Optional[int] = None,
 ) -> specs.Spec[Observations]:
@@ -21,6 +22,8 @@ def get_observation_spec(
         Number of ants in the colony
     num_signals
         Number of signal channels
+    view_distance
+        View distance in cells each agent can see
     carry_capacity
         Ant carrying capacity
     num_colonies
@@ -31,9 +34,10 @@ def get_observation_spec(
     Spec
         Observation specification
     """
+    n_obs_cells = (2 * view_distance + 1) ** 2
     ants = (
         specs.BoundedArray(
-            shape=(num_agents, num_colonies, 9),
+            shape=(num_agents, num_colonies, n_obs_cells),
             minimum=0.0,
             maximum=1.0,
             dtype=float,
@@ -41,7 +45,7 @@ def get_observation_spec(
         )
         if num_colonies
         else specs.BoundedArray(
-            shape=(num_agents, 9),
+            shape=(num_agents, n_obs_cells),
             minimum=0.0,
             maximum=1.0,
             dtype=float,
@@ -49,28 +53,28 @@ def get_observation_spec(
         )
     )
     food = specs.BoundedArray(
-        shape=(num_agents, 9),
+        shape=(num_agents, n_obs_cells),
         minimum=0.0,
         maximum=jnp.inf,
         dtype=float,
         name="food",
     )
     signals = specs.BoundedArray(
-        shape=(num_agents, num_signals, 9),
+        shape=(num_agents, num_signals, n_obs_cells),
         minimum=0.0,
         maximum=jnp.inf,
         dtype=float,
         name="signals",
     )
     nest = specs.BoundedArray(
-        shape=(num_agents, 9),
+        shape=(num_agents, n_obs_cells),
         minimum=0.0,
         maximum=1.0,
         dtype=float,
         name="nest",
     )
     terrain = specs.BoundedArray(
-        shape=(num_agents, 9),
+        shape=(num_agents, n_obs_cells),
         minimum=0.0,
         maximum=1.0,
         dtype=float,

@@ -38,6 +38,7 @@ class ThantsMono(Environment):
         take_food_amount: float = 0.1,
         deposit_food_amount: float = 0.1,
         signal_deposit_amount: float = 0.1,
+        view_distance: int = 1,
     ) -> None:
         """
         Initialise the environment
@@ -76,6 +77,8 @@ class ThantsMono(Environment):
             Amount of (attempted) food deposited by a deposit food action
         signal_deposit_amount
             Amount of signal deposited by the deposit signal action
+        view_distance
+            Number of cells away from an agent observed by each agent
         """
         colony_generator = colony_generator or BasicColonyGenerator(25, 2, (5, 5))
         wrapped_colony_generator = SingleColonyWrapper(colony_generator)
@@ -92,6 +95,7 @@ class ThantsMono(Environment):
             take_food_amount=take_food_amount,
             deposit_food_amount=deposit_food_amount,
             signal_deposit_amount=signal_deposit_amount,
+            view_distance=view_distance,
         )
         super().__init__()
 

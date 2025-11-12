@@ -9,7 +9,7 @@ from thants.types import Observations, State
 
 
 def observations_from_state(
-    colony_sizes: Sequence[int], state: State
+    colony_sizes: Sequence[int], state: State, view_distance: int = 1
 ) -> Sequence[Observations]:
     """
     Generate individual agent observations from state for each colony
@@ -20,6 +20,8 @@ def observations_from_state(
         List of colony sizes
     state
         Environment state
+    view_distance
+        Distance in cells observed around each agent, default 1
 
     Returns
     -------
@@ -37,8 +39,9 @@ def observations_from_state(
     n_signals = state.colonies.signals.shape[1]
     dims = state.food.shape
     dims_arr = jnp.array([dims])
-    idxs = jnp.indices((3, 3))
-    idxs = idxs.swapaxes(0, 2).reshape(9, 2) - 1
+    d = 2 * view_distance + 1
+    idxs = jnp.indices((d, d))
+    idxs = idxs.swapaxes(0, 2).reshape(d**2, 2) - view_distance
 
     def get_ant_view(arr: jax.Array, i: jax.Array, x: jax.Array) -> jax.Array:
         return arr.at[i[:, jnp.newaxis], x[:, 0], x[:, 1]].get()
