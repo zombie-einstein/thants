@@ -204,7 +204,7 @@ class ThantsMultiColonyViewer(MatplotlibViewer[State]):
 
         ax.imshow(terrain)
         ax.imshow(nests)
-        food_img = ax.imshow(food, alpha=state.food)
+        food_img = ax.imshow(jnp.clip(state.food, 0.0, 1.0), alpha=state.food)
         ants_img = ax.imshow(ants)
 
         return colors, ants_img, food_img
