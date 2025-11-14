@@ -63,6 +63,7 @@ class BasicFoodGenerator(FoodGenerator):
         food_dims: tuple[int, int],
         drop_interval: int,
         drop_amount: float = 1.0,
+        decay_rate: float = 0.0,
     ):
         """
         Initialise basic food generator
@@ -75,10 +76,13 @@ class BasicFoodGenerator(FoodGenerator):
             Interval at which new blocks are dropped
         drop_amount
             Amount of food in each cell of food blocks
+        decay_rate
+            Amount dropped food will decay each step
         """
         self.food_dims = food_dims
         self.drop_interval = drop_interval
         self.drop_amount = drop_amount
+        self.decay_rate = decay_rate
 
     def _drop_food(self, key: chex.PRNGKey, food: jax.Array) -> jax.Array:
         """
@@ -144,6 +148,7 @@ class BasicFoodGenerator(FoodGenerator):
         chex.Array
             New food state
         """
+        food = jnp.maximum(food - self.decay_rate, 0.0)
         return jax.lax.cond(
             (step + 1) % self.drop_interval == 0,
             self._drop_food,
