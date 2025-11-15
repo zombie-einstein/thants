@@ -128,7 +128,7 @@ by all the colonies
 
 - *Colonies*: Ant colonies state
 - *Food*: 2d array representing the amount of food deposited at each cell
-- *Terrain*: Array of flags indicating if a cell can be occupied by an ant. This
+- *Terrain*: 2d array of flags indicating if a cell can be occupied by an ant. This
   allows obstacles to be placed on the environment.
 
 #### Updates
@@ -170,7 +170,7 @@ case there will be no change in state due to the chosen action.
 ### Observations
 
 Individual agent observations also consist of several components. Observations are
-individually made for the local neighbourhood of each ant, i.e. the 8 surrounding
+individually made for the local neighbourhood of each ant, i.e. the surrounding
 cells on the environment grid, and their own cell:
 
 - `ants`: Flag indicating if a cell in the neighbourhood is occupied by an ant,
@@ -183,8 +183,11 @@ cells on the environment grid, and their own cell:
 - `terrain`: Flag indicating if a neighbouring cell can be occupied.
 - `carrying`: Amount of food currently being carried by each ant.
 
+the number of local cells observed by each agent can be customised with the `view_distance`
+environment parameter.
+
 ### Rewards
 
 By default, rewards are granted to ants when they deposit food on their colonies nest.
-Reward signals can be customised by implementing the respective base classes
+Reward signals can be customised by implementing the respective base class
 [`thants.rewards.RewardFn`](src/thants/rewards.py).

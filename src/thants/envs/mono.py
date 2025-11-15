@@ -161,11 +161,13 @@ class ThantsMono(Environment):
 
         The observation consists of several components:
 
-        - `[n-agents, 1, 9]` view of ants in the local vicinity
-        - `[n-agents, 9]` view of food deposits in local vicinity
-        - `[n-agents, n-signals, 9]` view of signals in the local vicinity
-        - `[n-agents, 1, 9]` view indicating nest locations in the vicinity
+        - `[n-agents, 1, n-obs]` view of ants in the local vicinity
+        - `[n-agents, n-obs]` view of food deposits in local vicinity
+        - `[n-agents, n-signals, n-obs]` view of signals in the local vicinity
+        - `[n-agents, 1, n-obs]` view indicating nest locations in the vicinity
         - `[n_agents,]` amount of food being carried by ants
+
+        where `n-obs` is the number of observed cells, dependent on the view distance.
 
         Returns
         -------

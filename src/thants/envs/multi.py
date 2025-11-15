@@ -134,6 +134,7 @@ class Thants(Environment):
         merged_colonies = merge_colonies(colonies)
         food = self._food_generator.init(self.dims, food_key)
         terrain = self._terrain_generator(self.dims, terrain_key)
+        food = clear_nest(merged_colonies.nests, terrain, food)
         state = State(
             step=0,
             key=key,
@@ -271,11 +272,13 @@ class Thants(Environment):
 
         The observation consists of several components:
 
-        - `[n-agents, 9]` view of ants in the local vicinity
-        - `[n-agents, 9]` view of food deposits in local vicinity
-        - `[n-agents, n-signals, 9]` view of signals in the local vicinity
-        - `[n-agents, n-signals, 9]` view indicating nest locations in the vicinity
+        - `[n-agents, n-obs]` view of ants in the local vicinity
+        - `[n-agents, n-obs]` view of food deposits in local vicinity
+        - `[n-agents, n-signals, n-obs]` view of signals in the local vicinity
+        - `[n-agents, n-signals, n-obs]` view indicating nest locations in the vicinity
         - `[n_agents,]` amount of food being carried by ants
+
+        where `n-obs` is the number of observed cells, dependent on the view distance.
 
         Returns
         -------
