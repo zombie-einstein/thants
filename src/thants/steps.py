@@ -85,9 +85,9 @@ def update_positions(
     return new_pos
 
 
-def clear_nest(nests: jax.Array, food: jax.Array) -> jax.Array:
+def clear_nest(nests: jax.Array, terrain: jax.Array, food: jax.Array) -> jax.Array:
     """
-    Clear food deposited on each colony nest
+    Clear food deposited on each colony nest, or on an obstructed cell
 
     Parameters
     ----------
@@ -101,7 +101,8 @@ def clear_nest(nests: jax.Array, food: jax.Array) -> jax.Array:
     chex.Array
         Food state
     """
-    return jnp.where(nests > 0, 0.0, food)
+    x = jnp.logical_or(nests > 0, jnp.logical_not(terrain))
+    return jnp.where(x, 0.0, food)
 
 
 def merge_colonies(colonies: Sequence[Colony]) -> Colonies:

@@ -176,13 +176,26 @@ def test_merge_colonies():
     assert jnp.array_equal(colonies.colony_idx, expected_idxs)
 
 
-def test_clear_food() -> None:
+def test_clear_food_from_nest() -> None:
     dims = (3, 1)
 
     nests = jnp.array([[1], [0], [2]])
     food = jnp.ones(dims)
 
-    new_food = clear_nest(nests, food)
+    new_food = clear_nest(nests, jnp.ones(dims, dtype=bool), food)
     expected = jnp.array([[0.0], [1.0], [0.0]])
+
+    assert jnp.allclose(new_food, expected)
+
+
+def test_clear_food_terrain() -> None:
+    dims = (3, 1)
+
+    nests = jnp.zeros(dims)
+    food = jnp.ones(dims)
+    terrain = jnp.array([[True], [False], [True]])
+
+    new_food = clear_nest(nests, terrain, food)
+    expected = jnp.array([[1.0], [0.0], [1.0]])
 
     assert jnp.allclose(new_food, expected)

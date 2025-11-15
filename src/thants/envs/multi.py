@@ -215,7 +215,7 @@ class Thants(Environment):
             unwrapped_actions.deposit_signals,
         )
         # Clear food dropped on nests
-        new_food = clear_nest(state.colonies.nests, new_food)
+        new_food = clear_nest(state.colonies.nests, state.terrain, new_food)
         # Gather updated state
         colonies = Colonies(
             ants=Ants(
