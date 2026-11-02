@@ -1,5 +1,3 @@
-from typing import Optional
-
 import jax.numpy as jnp
 from jumanji import specs
 
@@ -11,7 +9,7 @@ def get_observation_spec(
     num_signals: int,
     view_distance: int,
     carry_capacity: float,
-    num_colonies: Optional[int] = None,
+    num_colonies: int | None = None,
 ) -> specs.Spec[Observations]:
     """
     Get observation spec for a given colony

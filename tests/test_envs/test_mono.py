@@ -53,11 +53,11 @@ def state_checks(env: ThantsMono, state: State) -> None:
 
 
 def test_env_outputs(key: chex.Array, env: ThantsMono) -> None:
-    state, obs = env.reset(key)
+    state, _ = env.reset(key)
 
     state_checks(env, state)
 
     actions = jnp.zeros((env.num_agents,), dtype=int)
-    state, obs = env.step(state, actions)
+    state, _ = env.step(state, actions)
 
     state_checks(env, state)

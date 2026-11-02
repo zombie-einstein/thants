@@ -109,7 +109,7 @@ def test_fuzz_movement(key: chex.PRNGKey) -> None:
         new_pos = update_positions(dims, pos, terrain, moves)
         return (k, new_pos), pos
 
-    (_, final_pos), positions = jax.lax.scan(step, (key, start_pos), None, length=50)
+    (_, _final_pos), positions = jax.lax.scan(step, (key, start_pos), None, length=50)
 
     idxs = positions[:, :, 0] * dims[1] + positions[:, :, 1]
 

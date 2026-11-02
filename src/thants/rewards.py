@@ -1,5 +1,6 @@
 import abc
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from itertools import pairwise
 
 import jax
 import jax.numpy as jnp
@@ -13,7 +14,7 @@ def delivered_food(
     pos: jax.Array,
     carrying_before: jax.Array,
     carrying_after: jax.Array,
-    colony_idxs: Optional[jax.Array] = None,
+    colony_idxs: jax.Array | None = None,
 ) -> jax.Array:
     """
     Calculate food deposited by individual ant on a nest
@@ -131,4 +132,4 @@ class DeliveredFoodRewards(RewardFn):
             new_state.colonies.ants.carrying,
             colony_idxs=new_state.colonies.colony_idx,
         )
-        return [rewards[a:b] for a, b in zip(boundaries[:-1], boundaries[1:])]
+        return [rewards[a:b] for a, b in pairwise(boundaries)]

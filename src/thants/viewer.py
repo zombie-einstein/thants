@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Tuple
+from collections.abc import Sequence
 
 import chex
 import jax
@@ -112,9 +112,7 @@ class ThantsMultiColonyViewer(MatplotlibViewer[State]):
         f_dims = (10.0 * dims[1] / longest, 10.0 * dims[0] / longest)
         self.figure_size = f_dims
 
-    def render(
-        self, state: State, save_path: Optional[str] = None
-    ) -> Optional[NDArray]:
+    def render(self, state: State, save_path: str | None = None) -> NDArray | None:
         """Render a frame of the environment for a given state using matplotlib
 
         Parameters
@@ -144,7 +142,7 @@ class ThantsMultiColonyViewer(MatplotlibViewer[State]):
         return self._display(fig)
 
     def animate(
-        self, states: Sequence[State], interval: int, save_path: Optional[str] = None
+        self, states: Sequence[State], interval: int, save_path: str | None = None
     ) -> matplotlib.animation.FuncAnimation:
         """Create an animation from a sequence of states
 
@@ -211,11 +209,11 @@ class ThantsMultiColonyViewer(MatplotlibViewer[State]):
 
     def _get_fig_ax(
         self,
-        name_suffix: Optional[str] = None,
+        name_suffix: str | None = None,
         show: bool = True,
         padding: float = 0.05,
         **fig_kwargs: str,
-    ) -> Tuple[plt.Figure, plt.Axes]:
+    ) -> tuple[plt.Figure, plt.Axes]:
         fig, ax = super()._get_fig_ax(
             name_suffix=name_suffix, show=show, padding=padding
         )
