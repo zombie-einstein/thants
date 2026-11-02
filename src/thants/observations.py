@@ -1,4 +1,5 @@
-from typing import Sequence
+from collections.abc import Sequence
+from itertools import pairwise
 
 import chex
 import jax
@@ -90,7 +91,7 @@ def observations_from_state(
             terrain=terrain[a:b],
             carrying=state.colonies.ants.carrying[a:b],
         )
-        for a, b in zip(boundaries[:-1], boundaries[1:])
+        for a, b in pairwise(boundaries)
     ]
 
     return observations

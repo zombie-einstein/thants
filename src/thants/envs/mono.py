@@ -1,5 +1,5 @@
+from collections.abc import Sequence
 from functools import cached_property
-from typing import Optional, Sequence
 
 import chex
 import jax
@@ -27,12 +27,12 @@ class ThantsMono(Environment):
     def __init__(
         self,
         dims: tuple[int, int] = (50, 50),
-        colony_generator: Optional[ColonyGenerator] = None,
-        food_generator: Optional[FoodGenerator] = None,
-        terrain_generator: Optional[TerrainGenerator] = None,
-        signal_dynamics: Optional[SignalPropagator] = None,
-        reward_fn: Optional[RewardFn] = None,
-        viewer: Optional[Viewer[State]] = None,
+        colony_generator: ColonyGenerator | None = None,
+        food_generator: FoodGenerator | None = None,
+        terrain_generator: TerrainGenerator | None = None,
+        signal_dynamics: SignalPropagator | None = None,
+        reward_fn: RewardFn | None = None,
+        viewer: Viewer[State] | None = None,
         max_steps: int = 10_000,
         carry_capacity: float = 1.0,
         take_food_amount: float = 0.1,
@@ -214,7 +214,7 @@ class ThantsMono(Environment):
         self,
         states: Sequence[State],
         interval: int = 100,
-        save_path: Optional[str] = None,
+        save_path: str | None = None,
     ) -> FuncAnimation:
         """Create an animation from a sequence of environment states.
 

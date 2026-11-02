@@ -49,9 +49,7 @@ state_history = [state]
 
 for _ in range(50):
     key, action_key = jax.random.split(key, 2)
-    actions = jax.random.choice(
-        action_key, env.num_actions, (env.num_agents,)
-    )
+    actions = jax.random.choice(action_key, env.num_actions, (env.num_agents,))
     state, obs = env.step(state, actions)
     state_history.append(state)
 

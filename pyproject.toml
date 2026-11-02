@@ -1,44 +1,51 @@
-[tool.poetry]
+[project]
 name = "thants"
 version = "0.3.4"
 description = "Ants! On your GPU! With JAX!"
-authors = ["zombie-einstein <zombie-einstein@proton.me>"]
-license = "MIT"
 readme = "README.md"
-packages = [{include = "thants", from = "src"}]
+authors = [
+    { name = "zombie-einstein", email = "zombie-einstein@proton.me" }
+]
+maintainers = [
+    { name = "zombie-einstein", email = "zombie-einstein@proton.me" }
+]
 keywords = [
   "agent-based modelling",
   "simulation",
   "reinforcement-learning",
 ]
+license = "MIT"
+license-files = ["LICENSE"]
 classifiers = [
-  "Development Status :: 4 - Beta",
-  "Programming Language :: Python",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: Implementation :: PyPy",
-  "License :: OSI Approved :: MIT License",
-  "Environment :: GPU",
-  "Intended Audience :: Science/Research",
-  "Topic :: Scientific/Engineering :: Artificial Intelligence",
-  "Topic :: Scientific/Engineering :: Artificial Life",
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Environment :: GPU",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Artificial Life",
+]
+requires-python = ">=3.12"
+dependencies = [
+    "chex==0.1.90",
+    "jumanji>=1.1.2",
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<4.0"
-jumanji = "^1.1.1"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.4.1"
-pre-commit = "^4.3.0"
-taskipy = "^1.14.1"
-mypy = "^1.18.2"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.13.6,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mypy>=2.4.1",
+    "pre-commit>=4.7.0",
+    "pytest>=9.2.0",
+    "taskipy>=1.14.1",
+]
 
 [tool.taskipy.tasks]
 test = { cmd = "pytest tests", help="Run tests"}

@@ -23,12 +23,18 @@ def env() -> Thants:
 
 
 def test_render(monkeypatch, key: chex.PRNGKey, env: Thants) -> None:
+    import matplotlib
+
+    matplotlib.use("Agg")
     monkeypatch.setattr(Figure, "show", lambda _: None)
     state, _ = env.reset(key)
     env.render(state)
 
 
 def test_animation(key: chex.PRNGKey, env: Thants) -> None:
+    import matplotlib
+
+    matplotlib.use("Agg")
     state, _ = env.reset(key)
 
     states = [state]

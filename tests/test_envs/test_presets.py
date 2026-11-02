@@ -1,5 +1,3 @@
-from typing import Type
-
 import chex
 import jax
 import pytest
@@ -17,7 +15,7 @@ from thants.types import Observations
 )
 def test_env_runs(
     key: chex.PRNGKey,
-    env_type: Type[ThantsDual | ThantsQuad],
+    env_type: type[ThantsDual | ThantsQuad],
     dims: tuple[int, int],
 ) -> None:
     n_steps = 10
@@ -35,7 +33,7 @@ def test_env_runs(
         _state, timesteps = env.step(_state, actions)
         return _state, [t.observation for t in timesteps]
 
-    final_state, obs = jax.lax.scan(step, state, None, length=n_steps)
+    _final_state, obs = jax.lax.scan(step, state, None, length=n_steps)
 
     assert isinstance(obs, list)
     assert all([isinstance(x, Observations)] for x in obs)

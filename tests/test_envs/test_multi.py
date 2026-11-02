@@ -51,7 +51,7 @@ def test_env_does_not_smoke(key: chex.Array, env: Thants) -> None:
 
     assert isinstance(obs, list)
     assert len(obs) == 2
-    assert all([isinstance(x, Observations) for x in obs])
+    assert all(isinstance(x, Observations) for x in obs)
 
     for n, o in zip(env.num_agents, obs):
         assert o.ants.shape == (n_steps, n, 2, 9)

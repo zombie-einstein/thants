@@ -11,10 +11,8 @@ def test_colony_generator(key) -> None:
     colonies = generator(dims, key)
     assert isinstance(colonies, list)
     assert len(colonies) == 2
-    assert all([isinstance(c, Colony) for c in colonies])
-    assert all(
-        [c.ants.pos.shape == (n, 2) for c, n in zip(colonies, generator.n_agents)]
-    )
+    assert all(isinstance(c, Colony) for c in colonies)
+    assert all(c.ants.pos.shape == (n, 2) for c, n in zip(colonies, generator.n_agents))
 
     occupation = jnp.zeros(dims, dtype=int)
 
