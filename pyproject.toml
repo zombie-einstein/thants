@@ -35,6 +35,11 @@ dependencies = [
     "jumanji>=1.1.2",
 ]
 
+[project.urls]
+repository = "https://github.com/zombie-einstein/thants"
+homepage = "https://github.com/zombie-einstein/thants"
+issues = "https://github.com/zombie-einstein/thants/issues"
+
 [build-system]
 requires = ["uv_build>=0.13.6,<0.14.0"]
 build-backend = "uv_build"
